@@ -1,12 +1,11 @@
 package org.springframework.security.boot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.security.boot.jwt.token.JwtToken;
 
 @ConfigurationProperties(prefix = SecurityPac4jProperties.PREFIX)
 public class SecurityPac4jProperties {
 
-	public static final String PREFIX = "spring.security.jwt";
+	public static final String PREFIX = "spring.security.pac4j";
 	public static final String JWT_TOKEN_HEADER_PARAM = "X-Authorization";
 	
 	/** Specifies the name of the header on where to find the token (i.e. X-Authorization). */
