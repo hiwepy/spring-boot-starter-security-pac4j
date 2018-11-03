@@ -375,6 +375,7 @@
         <maven-surefire-plugin.vertsion>2.21.0</maven-surefire-plugin.vertsion>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
         <pac4j.version>3.3.0</pac4j.version>
+        <pac4j-webmvc.version>3.2.0</pac4j-webmvc.version>
 		<scribejava.version>6.0.0</scribejava.version>
 		<pac4j-spring-security.version>4.1.0</pac4j-spring-security.version>
 		<security-biz.version>1.0.0-SNAPSHOT</security-biz.version>
@@ -526,11 +527,11 @@
             <artifactId>pac4j-oauth</artifactId>
             <version>${pac4j.version}</version>
         </dependency>
-        <dependency>
+       <!--  <dependency>
         	<groupId>com.github.vindell</groupId>
 			<artifactId>pac4j-oauth-ext</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-http</artifactId>
@@ -586,7 +587,11 @@
             <artifactId>pac4j-sql</artifactId>
             <version>${pac4j.version}</version>
         </dependency>
-		
+		<dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>spring-webmvc-pac4j</artifactId>
+            <version>${pac4j-webmvc.version}</version>
+        </dependency>
 	</dependencies>
 
 </project>
