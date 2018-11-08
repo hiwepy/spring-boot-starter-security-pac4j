@@ -374,13 +374,8 @@
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-surefire-plugin.vertsion>2.21.0</maven-surefire-plugin.vertsion>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-        <pac4j.version>3.3.0</pac4j.version>
-        <pac4j-webmvc.version>3.2.0</pac4j-webmvc.version>
-		<scribejava.version>6.0.0</scribejava.version>
 		<pac4j-spring-security.version>4.1.0</pac4j-spring-security.version>
 		<security-biz.version>1.0.0-SNAPSHOT</security-biz.version>
-		<scribe.version>3.4.1</scribe.version>
-		<woodstox-asl.version>4.4.1</woodstox-asl.version>
 	</properties>
 	
 	<dependencies>
@@ -448,150 +443,27 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-	 
+	 	
+	 	<!-- https://mvnrepository.com/artifact/org.pac4j/spring-security-pac4j -->
+		<!-- PAC4J Implementation For Spring Security -->
+		<dependency>
+		    <groupId>org.pac4j</groupId>
+		    <artifactId>spring-security-pac4j</artifactId>
+		    <version>${pac4j-spring-security.version}</version>
+		</dependency>
+	 	<!-- https://github.com/vindell/spring-boot-starter-pac4j -->
+		<dependency>
+			<groupId>com.github.vindell</groupId>
+			<artifactId>spring-boot-starter-pac4j</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 	 	<!-- https://github.com/vindell/spring-boot-starter-security-biz -->
 		<dependency>
 			<groupId>com.github.vindell</groupId>
 			<artifactId>spring-boot-starter-security-biz</artifactId>
 			<version>${security-biz.version}</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.pac4j/spring-security-pac4j -->
-		<dependency>
-		    <groupId>org.pac4j</groupId>
-		    <artifactId>spring-security-pac4j</artifactId>
-		    <version>${pac4j-spring-security.version}</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.github.scribejava/scribejava-core -->
-		<dependency>
-		    <groupId>com.github.scribejava</groupId>
-		    <artifactId>scribejava-core</artifactId>
-		    <version>${scribejava.version}</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.github.scribejava/scribejava-apis -->
-		<dependency>
-		    <groupId>com.github.scribejava</groupId>
-		    <artifactId>scribejava-apis</artifactId>
-		    <version>${scribejava.version}</version>
-		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-core -->
-		<dependency>
-		    <groupId>org.jasig.cas.client</groupId>
-		    <artifactId>cas-client-core</artifactId>
-		    <version>${cas-client.version}</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.codehaus.woodstox</groupId>
-		    <artifactId>woodstox-core-asl</artifactId>
-		    <version>${woodstox-asl.version}</version>
-		</dependency>
-		
-		<!-- http://mvnrepository.com/artifact/com.alibaba/fastjson -->
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-			<version>${fastjson.version}</version>
-		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.pac4j -->
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-cas</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-		    <groupId>org.pac4j</groupId>
-		    <artifactId>pac4j-config</artifactId>
-		    <version>${pac4j.version}</version>
-		    <scope>runtime</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-core</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-couch</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-gae</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-oauth</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-       <!--  <dependency>
-        	<groupId>com.github.vindell</groupId>
-			<artifactId>pac4j-oauth-ext</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-        </dependency> -->
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-http</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-jwt</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-kerberos</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-ldap</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-mongo</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-openid</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-oidc</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-saml</artifactId>
-            <version>${pac4j.version}</version>
-            <exclusions>
-            	<exclusion>
-            		<groupId>org.opensaml</groupId>
-            		<artifactId>*</artifactId>
-            	</exclusion>
-            	<exclusion>
-            		<groupId>net.shibboleth.tool</groupId>
-            		<artifactId>*</artifactId>
-            	</exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-sql</artifactId>
-            <version>${pac4j.version}</version>
-        </dependency>
-		<dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>spring-webmvc-pac4j</artifactId>
-            <version>${pac4j-webmvc.version}</version>
-        </dependency>
+		 
 	</dependencies>
 
 </project>

@@ -5,6 +5,12 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.pac4j.core.config.Config;
+import org.pac4j.spring.boot.ext.Pac4jPathBuilder;
+import org.pac4j.spring.boot.ext.property.Pac4jProperties;
+import org.pac4j.springframework.security.web.CallbackFilter;
+import org.pac4j.springframework.security.web.LogoutFilter;
+import org.pac4j.springframework.security.web.SecurityFilter;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -13,19 +19,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.boot.biz.authentication.ajax.AjaxAwareAuthenticationFailureHandler;
-import org.springframework.security.boot.jwt.authentication.ajax.AjaxAwareAuthenticationSuccessHandler;
-import org.springframework.security.boot.jwt.authentication.ajax.AjaxUsernamePasswordAuthenticationFilter;
-import org.springframework.security.boot.jwt.authentication.jwt.JwtTokenAuthenticationFilter;
-import org.springframework.security.boot.jwt.authentication.jwt.SkipPathRequestMatcher;
-import org.springframework.security.boot.jwt.authentication.jwt.extractor.TokenExtractor;
+import org.springframework.security.boot.biz.authentication.ajax.AjaxAwareAuthenticationSuccessHandler;
 import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -40,12 +44,11 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.scribejava.core.extractors.TokenExtractor;
 
 @Configuration
 @AutoConfigureBefore(name = { 
@@ -58,14 +61,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
-
+	@Autowired
+	private Pac4jProperties pac4jProperties;
 	@Autowired
 	private SecurityPac4jProperties jwtProperties;
 	@Autowired
 	private SecurityBizProperties bizProperties;
 	@Autowired
 	private ServerProperties serverProperties;
-
+	@Autowired
+	private Pac4jPathBuilder pathBuilder;
 
 	@Bean
 	protected BCryptPasswordEncoder passwordEncoder() {
@@ -78,7 +83,7 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
 		return new WebAuthenticationDetailsSource();
 	}
 
-	@Bean
+	/*@Bean
 	@ConditionalOnMissingBean
 	public AuthenticationSuccessHandler successHandler(ObjectMapper mapper) {
 		
@@ -94,7 +99,7 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
 			return successHandler;
 		}
 		
-	}
+	}*/
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -131,7 +136,7 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
 	public ObjectMapper objectMapper() {
 		return new ObjectMapper();
 	}
-    
+    /*
     @Bean
 	@ConditionalOnMissingBean
 	public AjaxUsernamePasswordAuthenticationFilter jwtAjaxLoginProcessingFilter(AuthenticationFailureHandler failureHandler,
@@ -175,7 +180,7 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
         
         return authenticationFilter;
     }
-     
+     */
 	
 	@Bean
 	@ConditionalOnMissingBean
@@ -217,18 +222,6 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
 		
 		return entryPoint;
 	}
-	
-	/**
-	 * 系统登录注销过滤器；默认：org.springframework.security.web.authentication.logout.LogoutFilter
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public LogoutFilter logoutFilter() {
-		// 登录注销后的重定向地址：直接进入登录页面
-		LogoutFilter logoutFilter = new LogoutFilter(bizProperties.getLoginUrl(), new SecurityContextLogoutHandler());
-		logoutFilter.setFilterProcessesUrl(bizProperties.getLogoutUrlPatterns());
-		return logoutFilter;
-	}
 
 	/*@Bean
 	public FilterRegistrationBean<HttpParamsFilter> httpParamsFilter() {
@@ -238,6 +231,87 @@ public class SecurityPac4jWebFilterConfiguration implements ApplicationContextAw
 		filterRegistrationBean.addUrlPatterns("/");
 		return filterRegistrationBean;
 	}*/
+	
+	/**
+	 * 账号注销过滤器 ：处理账号注销
+	 */
+	@Bean
+	public FilterRegistrationBean<LogoutFilter> j2eLogoutFilter(Config config){
+		
+		FilterRegistrationBean<LogoutFilter> filterRegistration = new FilterRegistrationBean<LogoutFilter>();
+		
+		LogoutFilter logoutFilter = new LogoutFilter();
+	    
+		// Whether the centralLogout must be performed（是否注销统一身份认证）
+        logoutFilter.setCentralLogout(pac4jProperties.isCentralLogout());
+		// Security Configuration
+        logoutFilter.setConfig(config);
+        // Default logourl url
+        logoutFilter.setDefaultUrl( pathBuilder.getLogoutURL(serverProperties.getServlet().getContextPath()) );
+        // Whether the application logout must be performed（是否注销本地应用身份认证）
+        logoutFilter.setLocalLogout(pac4jProperties.isLocalLogout());
+        // Pattern that logout urls must match（注销登录路径规则，用于匹配登录请求操作）
+        logoutFilter.setLogoutUrlPattern(pac4jProperties.getLogoutUrlPattern());
+        
+        filterRegistration.setFilter(logoutFilter);
+        
+        filterRegistration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1000);
+	    filterRegistration.addUrlPatterns("/logout");
+	    
+	    return filterRegistration;
+	}
+	
+	/**
+	 * 回调过滤器 ：处理登录后的回调访问
+	 */
+	@Bean
+	public FilterRegistrationBean<CallbackFilter> j2eCallbackFilter(Config config){
+		
+		FilterRegistrationBean<CallbackFilter> filterRegistration = new FilterRegistrationBean<CallbackFilter>();
+		
+	    CallbackFilter callbackFilter = new CallbackFilter();
+	    
+	    // Security Configuration
+        callbackFilter.setConfig(config);
+        // Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
+        callbackFilter.setDefaultUrl( pathBuilder.getLoginURL(serverProperties.getServlet().getContextPath()) );
+        // Whether multiple profiles should be kept
+        callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
+        
+        filterRegistration.setFilter(callbackFilter);
+        filterRegistration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1001);
+        filterRegistration.addUrlPatterns("/callback"); 
+	    
+	    return filterRegistration;
+	}
+	
+	/**
+	 * 权限控制过滤器 ：实现权限认证
+	 */
+	@Bean
+	public FilterRegistrationBean<SecurityFilter> j2eSecurityFilter(Config config){
+		
+		FilterRegistrationBean<SecurityFilter> filterRegistration = new FilterRegistrationBean<SecurityFilter>();
+		
+		SecurityFilter securityFilter = new SecurityFilter();  
+		
+		// List of authorizers
+		securityFilter.setAuthorizers(pac4jProperties.getAuthorizers());
+		// List of clients for authentication
+		securityFilter.setClients(pac4jProperties.getClients());
+		// Security configuration
+		securityFilter.setConfig(config);
+		securityFilter.setMatchers(pac4jProperties.getMatchers());
+		// Whether multiple profiles should be kept
+		securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
+		
+        filterRegistration.setFilter(securityFilter);
+
+        filterRegistration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1002);
+        filterRegistration.addUrlPatterns("/*");
+	    
+	    return filterRegistration;
+	}
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
