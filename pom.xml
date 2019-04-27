@@ -477,10 +477,10 @@
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 		</dependency>
-	 	<!-- https://github.com/vindell/spring-boot-starter-security-biz -->
+	 	<!-- https://github.com/vindell/spring-boot-starter-pac4j -->
 		<dependency>
 			<groupId>com.github.vindell</groupId>
-			<artifactId>spring-boot-starter-security-biz</artifactId>
+			<artifactId>spring-boot-starter-pac4j</artifactId>
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.pac4j -->

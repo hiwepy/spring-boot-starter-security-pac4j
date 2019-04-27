@@ -1,9 +1,2 @@
-server:
-  port: 7900
-
-flyway: 
-  enabled: true
-  baseline-on-migrate: true
-  baseline-version: 1.0.0
-  baseline-description: 系统初始化 
-  
+spring:  security:    pac4j:      enabled: true
+pac4j:  failure-url:   logout:    central-logout: true    default-url: ddd    logout-url-pattern: sadsa     local-logout: true    destroy-session: true  cas:    allowed-proxy-chains:   oauth:    enabled: true    
