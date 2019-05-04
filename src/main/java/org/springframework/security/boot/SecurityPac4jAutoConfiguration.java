@@ -1,7 +1,7 @@
 package org.springframework.security.boot;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.spring.boot.ext.property.Pac4jProperties;
+import org.pac4j.spring.boot.Pac4jProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

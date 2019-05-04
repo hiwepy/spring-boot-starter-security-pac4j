@@ -1,10 +1,10 @@
 package org.springframework.security.boot;
 
 import org.pac4j.core.config.Config;
+import org.pac4j.spring.boot.Pac4jHttpProperties;
+import org.pac4j.spring.boot.Pac4jLogoutProperties;
+import org.pac4j.spring.boot.Pac4jProperties;
 import org.pac4j.spring.boot.ext.Pac4jPathBuilder;
-import org.pac4j.spring.boot.ext.property.Pac4jHttpProperties;
-import org.pac4j.spring.boot.ext.property.Pac4jLogoutProperties;
-import org.pac4j.spring.boot.ext.property.Pac4jProperties;
 import org.pac4j.springframework.security.web.CallbackFilter;
 import org.pac4j.springframework.security.web.LogoutFilter;
 import org.pac4j.springframework.security.web.Pac4jEntryPoint;
