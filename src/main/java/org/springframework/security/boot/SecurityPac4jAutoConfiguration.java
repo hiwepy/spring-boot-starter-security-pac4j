@@ -19,18 +19,16 @@ import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPointExt;
 @AutoConfigureBefore(SecurityAutoConfiguration.class)
 @ConditionalOnClass(DefaultAuthenticationEventPublisher.class)
 @ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
-@EnableConfigurationProperties({ SecurityPac4jProperties.class, Pac4jProperties.class })
+@EnableConfigurationProperties({ Pac4jProperties.class })
 public class SecurityPac4jAutoConfiguration {
   
 	@Autowired
 	private Pac4jProperties pac4jProperties;
-	@Autowired
-	private SecurityPac4jProperties securityPac4jProperties;
 	
     @Bean
 	@ConditionalOnMissingBean
     public Pac4jEntryPointExt pac4jEntryPoint(Config config){
-		return new Pac4jEntryPointExt(config, securityPac4jProperties.getClientName(), pac4jProperties.getClientParameterName());
+		return new Pac4jEntryPointExt(config, pac4jProperties.getClientName(), pac4jProperties.getClientParameterName());
 	}
 
 }
