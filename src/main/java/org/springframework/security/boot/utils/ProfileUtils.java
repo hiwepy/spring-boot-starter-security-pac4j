@@ -17,21 +17,25 @@ package org.springframework.security.boot.utils;
 
 import java.util.List;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
-import org.pac4j.springframework.security.authentication.Pac4jAuthentication;
+import org.springframework.security.boot.pac4j.authentication.Pac4jAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.util.WebUtils;
 
 /**
  * TODO
@@ -74,19 +78,25 @@ public class ProfileUtils {
 	}
 	
 	public static HttpServletResponse getResponse() {
-		return ((ServletWebRequest)RequestContextHolder.getRequestAttributes()).getResponse();
+		return ((ServletWebRequest) RequestContextHolder.getRequestAttributes()).getResponse();
 	}
 	
 	public static HttpSession getSession(boolean create) {
 		return getRequest().getSession(create);
 	}
 
-	public static WebContext getWebContext() {
-		return new J2EContext(getRequest(), getResponse());
+	public static JEEContext getJEEContext() {
+		return new JEEContext(getRequest(), getResponse());
 	}
 	
-	public static WebContext getWebContext(HttpServletRequest request, HttpServletResponse response) {
-		return new J2EContext(request, response);
+	public static JEEContext getJEEContext(ServletRequest request, ServletResponse response) {
+		return new JEEContext(WebUtils.getNativeRequest(request, HttpServletRequest.class),
+				WebUtils.getNativeResponse(response, HttpServletResponse.class));
+	}
+	
+	public static JEEContext getJEEContext(ServletRequest request, ServletResponse response, SessionStore sessionStore) {
+		return new JEEContext(WebUtils.getNativeRequest(request, HttpServletRequest.class),
+				WebUtils.getNativeResponse(response, HttpServletResponse.class), sessionStore);
 	}
 	
 	public static <U extends CommonProfile> List<U> getProfiles(final WebContext context) {
@@ -95,7 +105,7 @@ public class ProfileUtils {
     }
 	
 	public static <U extends CommonProfile> List<U> getProfiles() {
-        final ProfileManager<U> manager = new ProfileManager<U>(getWebContext());
+        final ProfileManager<U> manager = new ProfileManager<U>(getJEEContext());
         return manager.getAll(true);
     }
 

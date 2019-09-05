@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPointExt;
+import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
 
 // http://blog.csdn.net/change_on/article/details/76302161
 @Configuration
@@ -26,9 +26,8 @@ public class SecurityPac4jAutoConfiguration {
 	private Pac4jProperties pac4jProperties;
 	
     @Bean
-	@ConditionalOnMissingBean
-    public Pac4jEntryPointExt pac4jEntryPoint(Config config){
-		return new Pac4jEntryPointExt(config, pac4jProperties.getClientName(), pac4jProperties.getClientParameterName());
+    public Pac4jEntryPoint pac4jEntryPoint(Config config){
+		return new Pac4jEntryPoint(config, pac4jProperties.getClientName(), pac4jProperties.getClientParameterName());
 	}
 
 }

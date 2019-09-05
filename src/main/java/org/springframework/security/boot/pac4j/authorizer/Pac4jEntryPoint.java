@@ -15,9 +15,11 @@
  */
 package org.springframework.security.boot.pac4j.authorizer;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,54 +27,60 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.pac4j.core.client.Client;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.engine.DefaultSecurityLogic;
-import org.pac4j.core.exception.HttpAction;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.exception.http.HttpAction;
+import org.pac4j.core.http.ajax.AjaxRequestResolver;
+import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
 import org.pac4j.core.util.CommonHelper;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.util.StringUtils;
 
 /**
- * TODO
- * @author 		： <a href="https://github.com/vindell">vindell</a>
+ * This entry point can be defined with a security configuration and a client name:
+ * if it's an indirect client, it redirects the user to te identity provider for login. Otherwise, a 401 error page is returned.
+ * If no configuration is provided, an error is returned directly.
+ *
+ * @author Jerome Leleu
+ * @since 1.0.0
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
-public class Pac4jEntryPointExt extends DefaultSecurityLogic<Object, J2EContext> implements AuthenticationEntryPoint {
+public class Pac4jEntryPoint extends DefaultSecurityLogic<Object, JEEContext> implements AuthenticationEntryPoint {
 
     private Config config;
     /** Specifies the name of the request parameter on where to find the clientName (i.e. client_name). */
-	private String clientParameterName = "client_name";
+  	private String clientParameterName = "client_name";
     private String defaultClientName;
-
-    public Pac4jEntryPointExt() {}
-
-    public Pac4jEntryPointExt(final Config config, final String clientName, final String clientParameterName) {
+    private AjaxRequestResolver ajaxRequestResolver = new DefaultAjaxRequestResolver();
+    
+    public Pac4jEntryPoint() {}
+    
+    public Pac4jEntryPoint(final Config config, final String clientName, final String clientParameterName) {
         this.config = config;
         this.defaultClientName = clientName;
         this.clientParameterName = clientParameterName;
     }
-
-	@Override
+    
+    @Override
     public void commence(final HttpServletRequest request, final HttpServletResponse response,
                          final AuthenticationException authException) throws IOException, ServletException {
-
+    	
     	// 从请求地址中获取clientName
     	String clientName = obtainClient(request);
     		   clientName = StringUtils.hasText(clientName) ? clientName : defaultClientName;
-    	
+    		   
         if (config != null && CommonHelper.isNotBlank(clientName)) {
-            final J2EContext context = new J2EContext(request, response, config.getSessionStore());
+            final JEEContext context = new JEEContext(request, response, config.getSessionStore());
             final List<Client> currentClients = new ArrayList<>();
-            final Client client = config.getClients().findClient(clientName);
-            currentClients.add(client);
+            final Optional<Client> client = config.getClients().findClient(clientName);
+            currentClients.add(client.get());
 
             try {
                 if (startAuthentication(context, currentClients)) {
                     logger.debug("Redirecting to identity provider for login");
-                        saveRequestedUrl(context, currentClients);
-                        redirectToIdentityProvider(context, currentClients);
+                    saveRequestedUrl(context, currentClients, ajaxRequestResolver);
+                    redirectToIdentityProvider(context, currentClients);
                 } else {
                     unauthorized(context, currentClients);
                 }
@@ -84,30 +92,30 @@ public class Pac4jEntryPointExt extends DefaultSecurityLogic<Object, J2EContext>
             throw new TechnicalException("The Pac4jEntryPoint has been defined without config, nor clientName: it must be defined in a <security:http> section with the pac4j SecurityFilter or CallbackFilter");
         }
     }
-    
+
     protected String obtainClient(HttpServletRequest request) {
-		return request.getParameter(getClientParameterName());
-	}
+  		return request.getParameter(getClientParameterName());
+  	}
 
-    public Config getConfig() {
-        return config;
-    }
+      public Config getConfig() {
+          return config;
+      }
 
-    public void setConfig(final Config config) {
-        this.config = config;
-    }
+      public void setConfig(final Config config) {
+          this.config = config;
+      }
 
-    public String getClientParameterName() {
-		return clientParameterName;
-	}
+      public String getClientParameterName() {
+  		return clientParameterName;
+  	}
 
-	public void setClientParameterName(String clientParameterName) {
-		this.clientParameterName = clientParameterName;
-	}
+  	public void setClientParameterName(String clientParameterName) {
+  		this.clientParameterName = clientParameterName;
+  	}
 
 	@Override
-    public String toString() {
-        return CommonHelper.toNiceString(this.getClass(), "config", config, "clientName", defaultClientName);
-    }
-	
+	public String toString() {
+		return CommonHelper.toNiceString(this.getClass(), "config", config, "clientName", defaultClientName);
+	}
+
 }
