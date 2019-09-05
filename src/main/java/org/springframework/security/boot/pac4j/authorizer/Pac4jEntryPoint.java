@@ -46,6 +46,7 @@ import org.springframework.util.StringUtils;
  * @author Jerome Leleu
  * @since 1.0.0
  */
+@SuppressWarnings({"rawtypes","unchecked"})
 public class Pac4jEntryPoint extends DefaultSecurityLogic<Object, JEEContext> implements AuthenticationEntryPoint {
 
     private Config config;
@@ -62,7 +63,7 @@ public class Pac4jEntryPoint extends DefaultSecurityLogic<Object, JEEContext> im
         this.clientParameterName = clientParameterName;
     }
     
-    @Override
+	@Override
     public void commence(final HttpServletRequest request, final HttpServletResponse response,
                          final AuthenticationException authException) throws IOException, ServletException {
     	

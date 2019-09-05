@@ -29,6 +29,7 @@ import org.springframework.security.boot.utils.SpringSecurityHelper;
  * @author Jerome Leleu
  * @since 2.0.0
  */
+@SuppressWarnings("serial")
 public class Pac4jRememberMeAuthenticationToken extends RememberMeAuthenticationToken implements Pac4jAuthentication {
 
     private final List<CommonProfile> profiles;
