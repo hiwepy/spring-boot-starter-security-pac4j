@@ -15,11 +15,5 @@ public class SecurityPac4jProperties {
     
 	/** Whether Enable Pac4j Authentication. */
 	private boolean enabled = false;
-
-	private boolean localLogout;
-
-	private boolean destroySession;
-
-	private boolean centralLogout;
 	
 }
