@@ -41,6 +41,7 @@ import org.springframework.web.util.WebUtils;
  * TODO
  * @author ： <a href="https://github.com/vindell">vindell</a>
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class ProfileUtils {
 
 	public static SecurityContext getSecurityContext() {
@@ -51,7 +52,6 @@ public class ProfileUtils {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> T getPrincipal(Class<T> clazz) {
 		Object principal = getAuthentication().getPrincipal();
 		// 自身类.class.isAssignableFrom(自身类或子类.class)
@@ -120,7 +120,6 @@ public class ProfileUtils {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T extends CommonProfile> T getProfile(Class<T> clazz) {
 		Authentication auth = getAuthentication();
 		if (auth != null && auth instanceof Pac4jAuthentication) {
