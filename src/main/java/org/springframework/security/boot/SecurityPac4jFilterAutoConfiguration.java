@@ -59,6 +59,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	static class Pac4jWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
 	    private final Config config;
+	    private final Pac4jEntryPoint pac4jEntryPoint;
 		private final Pac4jPathBuilder pathBuilder;
 		private final Pac4jProperties pac4jProperties;
 		private final ServerProperties serverProperties;
@@ -67,11 +68,13 @@ public class SecurityPac4jFilterAutoConfiguration {
 				Pac4jProperties pac4jProperties,
 				ServerProperties serverProperties,
 				ObjectProvider<Config> configProvider,
+				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider,
    				ObjectProvider<Pac4jPathBuilder> pathBuilderProvider) {
 			
 			this.pac4jProperties = pac4jProperties;
 			this.serverProperties = serverProperties;
 			this.config = configProvider.getIfAvailable();
+			this.pac4jEntryPoint = pac4jEntryPointProvider.getIfAvailable();
 			this.pathBuilder = pathBuilderProvider.getIfAvailable();
 		}
 
@@ -116,7 +119,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.exceptionHandling().authenticationEntryPoint(new Pac4jEntryPoint(config, "CasClient", null))
+			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
 				.and()
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
