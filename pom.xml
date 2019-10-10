@@ -483,6 +483,7 @@
 			<groupId>com.github.vindell</groupId>
 			<artifactId>spring-boot-starter-security-biz</artifactId>
 		</dependency>
+		
 	 	<!-- https://github.com/vindell/spring-boot-starter-pac4j -->
 		<dependency>
 			<groupId>com.github.vindell</groupId>
