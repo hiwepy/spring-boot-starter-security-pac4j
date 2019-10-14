@@ -155,6 +155,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 		@Override
    	    public void configure(WebSecurity web) throws Exception {
    	    	web.ignoring()
+   	    		.antMatchers(pac4jAuthcProperties.getPathPattern())
+   	    		.antMatchers(pac4jCallbackProperties.getPathPattern())
    	    		.antMatchers(pac4jProperties.getCallbackUrl());
    	    }
 
