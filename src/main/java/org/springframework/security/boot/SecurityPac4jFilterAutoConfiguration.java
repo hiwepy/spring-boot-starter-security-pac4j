@@ -59,7 +59,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	
 	@Configuration
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
-	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityBizProperties.class })
+	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
+		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
     @Order(110)
 	static class Pac4jWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
@@ -154,10 +155,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		@Override
    	    public void configure(WebSecurity web) throws Exception {
    	    	web.ignoring()
-   	    		.antMatchers(pac4jProperties.getLoginUrl())
-   	    		.antMatchers(pac4jProperties.getSuccessUrl())
-   	    		.antMatchers(pac4jProperties.getFailureUrl())
-   	    		.antMatchers(pac4jProperties.getLogoutUrl());
+   	    		.antMatchers(pac4jProperties.getCallbackUrl());
    	    }
 
 	}

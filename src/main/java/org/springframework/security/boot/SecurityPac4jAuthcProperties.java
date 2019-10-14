@@ -16,8 +16,6 @@
 package org.springframework.security.boot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import org.springframework.security.boot.biz.property.SecurityCaptchaProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,8 +31,5 @@ public class SecurityPac4jAuthcProperties {
 
 	/** Authorization Path Pattern */
 	private String pathPattern = "/login/pac4j";
-	
-	@NestedConfigurationProperty
-	private SecurityCaptchaProperties captcha = new SecurityCaptchaProperties();
 
 }
