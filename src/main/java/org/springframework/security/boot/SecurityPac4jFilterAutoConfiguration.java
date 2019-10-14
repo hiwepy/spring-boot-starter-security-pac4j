@@ -6,16 +6,19 @@ import org.pac4j.spring.boot.Pac4jProperties;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
 import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -43,7 +46,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		// Security Configuration
 		logoutHandler.setConfig(config);
         // Default logourl url
-		String logoutUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getLoginUrl());
+		String logoutUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getLogoutUrl());
 		logoutHandler.setDefaultUrl(logoutUrl);
         // Whether the Session must be destroyed（是否销毁Session）
 		logoutHandler.setDestroySession(logoutProperties.isDestroySession());
@@ -54,10 +57,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 	    return logoutHandler;
 	}
-
 	
 	@Configuration
+	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityBizProperties.class })
+    @Order(110)
 	static class Pac4jWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
 	    private final Config config;
@@ -124,6 +128,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
 		}
+		
+		@Override
+   	    public void configure(WebSecurity web) throws Exception {
+   	    	web.ignoring()
+   	    		.antMatchers(pac4jProperties.getLoginUrl())
+   	    		.antMatchers(pac4jProperties.getSuccessUrl())
+   	    		.antMatchers(pac4jProperties.getFailureUrl())
+   	    		.antMatchers(pac4jProperties.getLogoutUrl());
+   	    }
 
 	}
 
