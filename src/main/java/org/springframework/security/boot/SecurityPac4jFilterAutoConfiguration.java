@@ -65,11 +65,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 
 		private final AuthenticationManager authenticationManager;
 		private final Config config;
-	    private final Pac4jEntryPoint pac4jEntryPoint;
+		private final Pac4jEntryPoint pac4jEntryPoint;
+
 		private final Pac4jProperties pac4jProperties;
-		private final ServerProperties serverProperties;
 		private final SecurityPac4jAuthcProperties pac4jAuthcProperties;
 		private final SecurityPac4jCallbackProperties pac4jCallbackProperties;
+		private final ServerProperties serverProperties;
 		
 		public Pac4jWebSecurityConfigurationAdapter(
 				SecurityBizProperties bizProperties,
@@ -82,9 +83,9 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<Config> configProvider,
 				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider) {
 			
+			this.pac4jProperties = pac4jProperties;
 			this.pac4jAuthcProperties = pac4jAuthcProperties;
 			this.pac4jCallbackProperties = pac4jCallbackProperties;
-			this.pac4jProperties = pac4jProperties;
 			this.serverProperties = serverProperties;
 			
 			this.authenticationManager = authenticationManagerProvider.getIfAvailable();
