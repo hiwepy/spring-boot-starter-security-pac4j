@@ -225,6 +225,16 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
    		return requiresAuthenticationRequestMatcher.matches(request);
    	}
    	
+	/**
+	 * Sets the URL that determines if authentication is required
+	 *
+	 * @param filterProcessesUrl
+	 */
+	public void setFilterProcessesUrl(String filterProcessesUrl) {
+		setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher(
+				filterProcessesUrl));
+	}
+   	
    	public final void setRequiresAuthenticationRequestMatcher(
    			RequestMatcher requestMatcher) {
    		Assert.notNull(requestMatcher, "requestMatcher cannot be null");

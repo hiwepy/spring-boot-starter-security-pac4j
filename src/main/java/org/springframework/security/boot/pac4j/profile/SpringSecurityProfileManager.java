@@ -36,7 +36,7 @@ public class SpringSecurityProfileManager extends ProfileManager<CommonProfile> 
     @Override
     public void save(final boolean saveInSession, final CommonProfile profile, final boolean multiProfile) {
         super.save(saveInSession, profile, multiProfile);
-
-        SpringSecurityHelper.populateAuthentication(retrieveAll(saveInSession));
+        SpringSecurityHelper.populateAuthentication(super.retrieveAll(saveInSession));
     }
+    
 }
