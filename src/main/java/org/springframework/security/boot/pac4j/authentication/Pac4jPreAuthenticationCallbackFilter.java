@@ -100,6 +100,10 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
         }
         
     }
+    
+    @Override
+   	public void afterPropertiesSet() {
+   	}
 
 	protected Object getPreAuthenticatedPrincipal(HttpServletRequest httpRequest) {
 		return ProfileUtils.getAuthentication().getPrincipal();

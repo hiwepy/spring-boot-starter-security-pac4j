@@ -68,6 +68,10 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
         this.authorizers = authorizers;
     }
 
+    @Override
+	public void afterPropertiesSet() {
+	}
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
 			throws IOException, ServletException {

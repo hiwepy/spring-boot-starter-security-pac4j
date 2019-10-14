@@ -3,7 +3,7 @@ package org.springframework.security.boot;
 import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
-import org.pac4j.spring.boot.ext.Pac4jPathBuilder;
+import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -33,7 +33,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	 * 账号注销处理器 ：处理账号注销
 	 */
 	@Bean
-	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, Pac4jPathBuilder pathBuilder, Pac4jLogoutProperties logoutProperties, ServerProperties serverProperties){
+	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, Pac4jProperties pac4jProperties,
+			Pac4jLogoutProperties logoutProperties, ServerProperties serverProperties){
 		
 		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler();
         
@@ -42,14 +43,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 		// Security Configuration
 		logoutHandler.setConfig(config);
         // Default logourl url
-		logoutHandler.setDefaultUrl( pathBuilder.getLogoutURL(serverProperties.getServlet().getContextPath()) );
+		String logoutUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getLoginUrl());
+		logoutHandler.setDefaultUrl(logoutUrl);
         // Whether the Session must be destroyed（是否销毁Session）
 		logoutHandler.setDestroySession(logoutProperties.isDestroySession());
         // Whether the application logout must be performed（是否注销本地应用身份认证）
 		logoutHandler.setLocalLogout(logoutProperties.isLocalLogout());
         // Pattern that logout urls must match（注销登录路径规则，用于匹配登录请求操作）
 		logoutHandler.setLogoutUrlPattern(logoutProperties.getLogoutUrlPattern());
-        
+		
 	    return logoutHandler;
 	}
 
@@ -60,7 +62,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 
 	    private final Config config;
 	    private final Pac4jEntryPoint pac4jEntryPoint;
-		private final Pac4jPathBuilder pathBuilder;
 		private final Pac4jProperties pac4jProperties;
 		private final ServerProperties serverProperties;
 	    
@@ -68,14 +69,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 				Pac4jProperties pac4jProperties,
 				ServerProperties serverProperties,
 				ObjectProvider<Config> configProvider,
-				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider,
-   				ObjectProvider<Pac4jPathBuilder> pathBuilderProvider) {
+				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider) {
 			
 			this.pac4jProperties = pac4jProperties;
 			this.serverProperties = serverProperties;
 			this.config = configProvider.getIfAvailable();
 			this.pac4jEntryPoint = pac4jEntryPointProvider.getIfAvailable();
-			this.pathBuilder = pathBuilderProvider.getIfAvailable();
 		}
 
 		/**
@@ -110,7 +109,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 		    // Security Configuration
 	        callbackFilter.setConfig(config);
 	        // Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
-	        callbackFilter.setDefaultUrl( pathBuilder.getLoginURL(serverProperties.getServlet().getContextPath()) );
+	        String callbackUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getCallbackUrl());
+	        callbackFilter.setDefaultUrl( callbackUrl );
 	        // Whether multiple profiles should be kept
 	        callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
 	        

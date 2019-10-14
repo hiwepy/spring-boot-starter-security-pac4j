@@ -4,11 +4,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 
 @ConfigurationProperties(prefix = SecurityPac4jProperties.PREFIX)
 @Getter
 @Setter
+@ToString
 public class SecurityPac4jProperties {
 
 	public static final String PREFIX = "spring.security.pac4j";
