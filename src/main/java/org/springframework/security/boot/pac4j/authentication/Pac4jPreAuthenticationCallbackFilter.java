@@ -22,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
@@ -34,6 +35,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.util.Assert;
 
 public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticatedProcessingFilter {
 
@@ -57,10 +61,13 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
 
     private String suffix;
 
+	private RequestMatcher requiresAuthenticationRequestMatcher;
+
     public Pac4jPreAuthenticationCallbackFilter() {
         setSuffix(DEFAULT_CALLBACK_SUFFIX);
         callbackLogic = new DefaultCallbackLogic<>();
         ((DefaultCallbackLogic<Object, JEEContext>) callbackLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
+        setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login/callback"));
     }
 
     public Pac4jPreAuthenticationCallbackFilter(final Config config) {
@@ -86,7 +93,19 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
     @Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
 			throws IOException, ServletException {
-
+    	
+    	HttpServletRequest httpRequest = (HttpServletRequest) request;
+		HttpServletResponse httpResponse = (HttpServletResponse) response;
+ 
+		if (!requiresAuthentication(httpRequest, httpResponse)) {
+			filterChain.doFilter(httpRequest, httpResponse);
+			return;
+		}
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug("Request is to process authentication");
+		}
+		
     	CommonHelper.assertNotNull("config", this.config);
     	
     	final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
@@ -187,5 +206,29 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
     public void setDefaultClient(final String defaultClient) {
         this.defaultClient = defaultClient;
     }
+    
+    /**
+   	 * Indicates whether this filter should attempt to process a login request for the
+   	 * current invocation.
+   	 * <p>
+   	 * It strips any parameters from the "path" section of the request URL (such as the
+   	 * jsessionid parameter in <em>https://host/myapp/index.html;jsessionid=blah</em>)
+   	 * before matching against the <code>filterProcessesUrl</code> property.
+   	 * <p>
+   	 * Subclasses may override for special requirements, such as Tapestry integration.
+   	 *
+   	 * @return <code>true</code> if the filter should attempt authentication,
+   	 * <code>false</code> otherwise.
+   	 */
+   	protected boolean requiresAuthentication(HttpServletRequest request,
+   			HttpServletResponse response) {
+   		return requiresAuthenticationRequestMatcher.matches(request);
+   	}
+   	
+   	public final void setRequiresAuthenticationRequestMatcher(
+   			RequestMatcher requestMatcher) {
+   		Assert.notNull(requestMatcher, "requestMatcher cannot be null");
+   		this.requiresAuthenticationRequestMatcher = requestMatcher;
+   	}
 
 }
