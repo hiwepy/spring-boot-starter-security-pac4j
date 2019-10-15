@@ -1,22 +1,22 @@
 package org.springframework.security.boot;
 
 import org.pac4j.core.config.Config;
+import org.pac4j.spring.boot.Pac4jClientsConfiguration;
 import org.pac4j.spring.boot.Pac4jProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
 
 // http://blog.csdn.net/change_on/article/details/76302161
 @Configuration
+@AutoConfigureAfter(Pac4jClientsConfiguration.class)
 @AutoConfigureBefore(SecurityAutoConfiguration.class)
-@ConditionalOnClass(DefaultAuthenticationEventPublisher.class)
 @ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 @EnableConfigurationProperties({ Pac4jProperties.class })
 public class SecurityPac4jAutoConfiguration {
