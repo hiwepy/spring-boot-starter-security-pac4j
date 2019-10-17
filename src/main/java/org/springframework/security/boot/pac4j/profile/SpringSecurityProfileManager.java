@@ -32,7 +32,7 @@ public class SpringSecurityProfileManager extends ProfileManager<CommonProfile> 
     public SpringSecurityProfileManager(final WebContext context) {
         super(context);
     }
-
+    
     @Override
     public void save(final boolean saveInSession, final CommonProfile profile, final boolean multiProfile) {
         super.save(saveInSession, profile, multiProfile);

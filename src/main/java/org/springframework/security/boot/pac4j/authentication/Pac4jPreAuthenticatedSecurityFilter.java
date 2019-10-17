@@ -57,7 +57,7 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
     public Pac4jPreAuthenticatedSecurityFilter() {
         securityLogic = new DefaultSecurityLogic<>();
         ((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
-        setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login/pac4j"));
+        setFilterProcessesUrl("/login/pac4j");
     }
 
     public Pac4jPreAuthenticatedSecurityFilter(final Config config) {
@@ -97,8 +97,9 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
         final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
         
         securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
-
+        	
             filterChain.doFilter(request, response);
+            
             return null;
 
         }, JEEHttpActionAdapter.INSTANCE, this.clients, this.authorizers, this.matchers, this.multiProfile);

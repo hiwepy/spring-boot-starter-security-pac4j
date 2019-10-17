@@ -33,18 +33,18 @@ import org.springframework.security.boot.utils.SpringSecurityHelper;
 public class Pac4jAuthenticationToken extends AbstractAuthenticationToken implements Pac4jAuthentication {
 
     private final List<CommonProfile> profiles;
-    private final CommonProfile profile;
-
+    private final CommonProfile principal;
+    
     public Pac4jAuthenticationToken(final List<CommonProfile> profiles) {
         super(SpringSecurityHelper.buildAuthorities(profiles));
         this.profiles = profiles;
-        this.profile = ProfileHelper.flatIntoOneProfile(profiles).get();
+        this.principal = ProfileHelper.flatIntoOneProfile(profiles).get();
         setAuthenticated(true);
     }
-
+    
     @Override
     public String getName() {
-        return profile.getId();
+        return principal.getId();
     }
 
     @Override
@@ -54,7 +54,7 @@ public class Pac4jAuthenticationToken extends AbstractAuthenticationToken implem
 
     @Override
     public Object getPrincipal() {
-        return profile;
+        return principal;
     }
 
     @Override
