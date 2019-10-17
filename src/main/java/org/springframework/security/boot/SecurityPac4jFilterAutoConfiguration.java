@@ -1,7 +1,7 @@
 package org.springframework.security.boot;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.spring.boot.Pac4jClientsConfiguration;
+import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
@@ -27,7 +27,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
-@AutoConfigureAfter(Pac4jClientsConfiguration.class)
+@AutoConfigureAfter(Pac4jAutoConfiguration.class)
 @AutoConfigureBefore({ SecurityFilterAutoConfiguration.class })
 @ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 @EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
