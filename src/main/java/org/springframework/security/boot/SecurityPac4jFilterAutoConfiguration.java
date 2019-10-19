@@ -148,19 +148,21 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 		
 		@Override
-		protected void configure(HttpSecurity http) throws Exception {
+		public void configure(HttpSecurity http) throws Exception {
 			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
 				.and()
+				.antMatcher(pac4jAuthcProperties.getPathPattern())
+				.antMatcher(pac4jCallbackProperties.getPathPattern())
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
 		}
 		
 		@Override
    	    public void configure(WebSecurity web) throws Exception {
-   	    	web.ignoring()
+   	    	/*web.ignoring()
    	    		.antMatchers(pac4jAuthcProperties.getPathPattern())
    	    		.antMatchers(pac4jCallbackProperties.getPathPattern())
-   	    		.antMatchers(pac4jProperties.getCallbackUrl());
+   	    		.antMatchers(pac4jProperties.getCallbackUrl());*/
    	    }
 
 	}

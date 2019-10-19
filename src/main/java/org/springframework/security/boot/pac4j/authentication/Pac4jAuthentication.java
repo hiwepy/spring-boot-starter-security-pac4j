@@ -16,10 +16,10 @@
 package org.springframework.security.boot.pac4j.authentication;
 
 
+import java.util.List;
+
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileHelper;
-
-import java.util.*;
 
 /**
  * Pac4j authentication interface.
