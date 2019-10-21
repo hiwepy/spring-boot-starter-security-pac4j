@@ -66,14 +66,14 @@ public class SecurityPac4jFilterAutoConfiguration {
     @Order(110)
 	static class Pac4jWebSecurityConfigurationAdapter extends SecurityBizConfigurerAdapter {
 
-		private final AuthenticationManager authenticationManager;
-		private final Config config;
-		private final Pac4jEntryPoint pac4jEntryPoint;
-
 		private final Pac4jProperties pac4jProperties;
 		private final SecurityPac4jAuthcProperties pac4jAuthcProperties;
 		private final SecurityPac4jCallbackProperties pac4jCallbackProperties;
 		private final ServerProperties serverProperties;
+		
+		private final AuthenticationManager authenticationManager;
+	    private final Config pac4jConfig;
+	    private final Pac4jEntryPoint pac4jEntryPoint;
 		
 		public Pac4jWebSecurityConfigurationAdapter(
 				SecurityBizProperties bizProperties,
@@ -83,8 +83,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ServerProperties serverProperties,
 				
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
-				ObjectProvider<Config> configProvider,
-				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider) {
+				ObjectProvider<Config> pac4jConfigProvider,
+				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider
+				
+			) {
 			
 			super(bizProperties);
 			
@@ -94,7 +96,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.serverProperties = serverProperties;
 			
 			this.authenticationManager = authenticationManagerProvider.getIfAvailable();
-			this.config = configProvider.getIfAvailable();
+			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
 			this.pac4jEntryPoint = pac4jEntryPointProvider.getIfAvailable();
 		}
 		
@@ -121,7 +123,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			// List of clients for authentication
 			securityFilter.setClients(pac4jProperties.getClients());
 			// Security configuration
-			securityFilter.setConfig(config);
+			securityFilter.setConfig(pac4jConfig);
 			securityFilter.setMatchers(pac4jProperties.getMatchers());
 			// Whether multiple profiles should be kept
 			securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
@@ -143,7 +145,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			}
 			
 		    // Security Configuration
-	        callbackFilter.setConfig(config);
+	        callbackFilter.setConfig(pac4jConfig);
 	        // Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
 	        String callbackUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getCallbackUrl());
 	        callbackFilter.setDefaultUrl( callbackUrl );
@@ -155,11 +157,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-			http.antMatcher(pac4jAuthcProperties.getPathPattern())
-				.antMatcher(pac4jCallbackProperties.getPathPattern())
-				.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
+			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
 				.and()
+				.antMatcher(pac4jAuthcProperties.getPathPattern())
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
+				.antMatcher(pac4jCallbackProperties.getPathPattern())
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
 			super.configure(http);
 		}
