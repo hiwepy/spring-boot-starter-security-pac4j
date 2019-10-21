@@ -1,5 +1,7 @@
 package org.springframework.security.boot;
 
+import java.util.Arrays;
+
 import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
@@ -102,8 +105,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 		
 		@Override
-		protected AuthenticationManager authenticationManager() throws Exception {
-			return authenticationManager == null ? super.authenticationManager() : authenticationManager;
+		public AuthenticationManager authenticationManagerBean() throws Exception {
+			return authenticationManager == null ? super.authenticationManagerBean() : authenticationManager;
 		}
 
 		/**
@@ -114,7 +117,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			
 			Pac4jPreAuthenticatedSecurityFilter securityFilter = new Pac4jPreAuthenticatedSecurityFilter();  
 			
-			securityFilter.setAuthenticationManager(authenticationManager());
+			securityFilter.setAuthenticationManager(authenticationManagerBean());
 			if (StringUtils.hasText(pac4jAuthcProperties.getPathPattern())) {
 				securityFilter.setFilterProcessesUrl(pac4jAuthcProperties.getPathPattern());
 			}
