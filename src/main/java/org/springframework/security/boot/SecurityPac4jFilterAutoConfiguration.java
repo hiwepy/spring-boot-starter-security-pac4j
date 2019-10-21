@@ -109,11 +109,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 		 * 权限控制过滤器 ：实现权限认证
 		 */
 		@Bean
-		public Pac4jPreAuthenticatedSecurityFilter pac4jSecurityFilter(){
+		public Pac4jPreAuthenticatedSecurityFilter pac4jSecurityFilter() throws Exception {
 			
 			Pac4jPreAuthenticatedSecurityFilter securityFilter = new Pac4jPreAuthenticatedSecurityFilter();  
 			
-			securityFilter.setAuthenticationManager(authenticationManager);
+			securityFilter.setAuthenticationManager(authenticationManager());
 			if (StringUtils.hasText(pac4jAuthcProperties.getPathPattern())) {
 				securityFilter.setFilterProcessesUrl(pac4jAuthcProperties.getPathPattern());
 			}
