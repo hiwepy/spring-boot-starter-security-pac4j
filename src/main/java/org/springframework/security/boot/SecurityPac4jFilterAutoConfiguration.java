@@ -97,6 +97,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.config = configProvider.getIfAvailable();
 			this.pac4jEntryPoint = pac4jEntryPointProvider.getIfAvailable();
 		}
+		
+		@Override
+		protected AuthenticationManager authenticationManager() throws Exception {
+			return authenticationManager == null ? super.authenticationManager() : authenticationManager;
+		}
 
 		/**
 		 * 权限控制过滤器 ：实现权限认证
