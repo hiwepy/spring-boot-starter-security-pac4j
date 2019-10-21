@@ -23,7 +23,6 @@ import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
 import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
@@ -65,7 +64,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
     @Order(110)
-	static class Pac4jWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
+	static class Pac4jWebSecurityConfigurationAdapter extends SecurityBizConfigurerAdapter {
 
 		private final AuthenticationManager authenticationManager;
 		private final Config config;
@@ -86,6 +85,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
 				ObjectProvider<Config> configProvider,
 				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider) {
+			
+			super(bizProperties);
 			
 			this.pac4jProperties = pac4jProperties;
 			this.pac4jAuthcProperties = pac4jAuthcProperties;
@@ -149,20 +150,18 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
-				.and()
-				.antMatcher(pac4jAuthcProperties.getPathPattern())
+			http.antMatcher(pac4jAuthcProperties.getPathPattern())
 				.antMatcher(pac4jCallbackProperties.getPathPattern())
+				.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
+				.and()
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
+			super.configure(http);
 		}
 		
 		@Override
    	    public void configure(WebSecurity web) throws Exception {
-   	    	/*web.ignoring()
-   	    		.antMatchers(pac4jAuthcProperties.getPathPattern())
-   	    		.antMatchers(pac4jCallbackProperties.getPathPattern())
-   	    		.antMatchers(pac4jProperties.getCallbackUrl());*/
+   	    	super.configure(web);
    	    }
 
 	}
