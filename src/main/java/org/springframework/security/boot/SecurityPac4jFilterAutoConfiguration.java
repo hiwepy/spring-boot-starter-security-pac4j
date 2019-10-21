@@ -135,11 +135,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 		 * 回调过滤器 ：处理登录后的回调访问
 		 */
 		@Bean
-		public Pac4jPreAuthenticationCallbackFilter pac4jCallbackFilter(){
+		public Pac4jPreAuthenticationCallbackFilter pac4jCallbackFilter() throws Exception {
 			
 			Pac4jPreAuthenticationCallbackFilter callbackFilter = new Pac4jPreAuthenticationCallbackFilter();
 		    
-			callbackFilter.setAuthenticationManager(authenticationManager);
+			callbackFilter.setAuthenticationManager(authenticationManager());
 			if (StringUtils.hasText(pac4jCallbackProperties.getPathPattern())) {
 				callbackFilter.setFilterProcessesUrl(pac4jCallbackProperties.getPathPattern());
 			}
