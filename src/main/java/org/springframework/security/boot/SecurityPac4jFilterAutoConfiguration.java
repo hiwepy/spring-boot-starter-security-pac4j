@@ -1,5 +1,7 @@
 package org.springframework.security.boot;
 
+import java.util.stream.Collectors;
+
 import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
@@ -25,7 +28,7 @@ import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 @Configuration
 @AutoConfigureAfter(Pac4jAutoConfiguration.class)
@@ -73,45 +76,43 @@ public class SecurityPac4jFilterAutoConfiguration {
 		private final SecurityPac4jCallbackProperties callbackProperties;
 		private final ServerProperties serverProperties;
 		
-		private final AuthenticationManager authenticationManager;
 	    private final Config pac4jConfig;
-	    private final Pac4jEntryPoint pac4jEntryPoint;
+	    private final Pac4jEntryPoint authenticationEntryPoint;
+    	private final RequestCache requestCache;
 		
 		public Pac4jWebSecurityConfigurationAdapter(
+				
 				SecurityBizProperties bizProperties,
-				SecurityPac4jAuthcProperties pac4jAuthcProperties,
-				SecurityPac4jCallbackProperties pac4jCallbackProperties,
+				SecurityPac4jAuthcProperties authcProperties,
+				SecurityPac4jCallbackProperties callbackProperties,
 				Pac4jProperties pac4jProperties,
 				ServerProperties serverProperties,
 				
+				ObjectProvider<AuthenticationProvider> authenticationProvider,
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
-				ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
-				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider
+				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider
 				
 			) {
 			
-			super(bizProperties, csrfTokenRepositoryProvider.getIfAvailable());
+			super(bizProperties, authcProperties, authenticationProvider.stream().collect(Collectors.toList()),
+					authenticationManagerProvider.getIfAvailable());
 			
 			this.pac4jProperties = pac4jProperties;
-			this.authcProperties = pac4jAuthcProperties;
-			this.callbackProperties = pac4jCallbackProperties;
+			this.authcProperties = authcProperties;
+			this.callbackProperties = callbackProperties;
 			this.serverProperties = serverProperties;
 			
-			this.authenticationManager = authenticationManagerProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
-			this.pac4jEntryPoint = pac4jEntryPointProvider.getIfAvailable();
+			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
+			
+   			this.requestCache = super.requestCache();
+   			
 		}
 		
-		@Override
-		public AuthenticationManager authenticationManagerBean() throws Exception {
-			return authenticationManager == null ? super.authenticationManagerBean() : authenticationManager;
-		}
-
 		/**
 		 * 权限控制过滤器 ：实现权限认证
 		 */
-		@Bean
 		public Pac4jPreAuthenticatedSecurityFilter pac4jSecurityFilter() throws Exception {
 			
 			Pac4jPreAuthenticatedSecurityFilter securityFilter = new Pac4jPreAuthenticatedSecurityFilter();  
@@ -137,7 +138,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 		/**
 		 * 回调过滤器 ：处理登录后的回调访问
 		 */
-		@Bean
 		public Pac4jPreAuthenticationCallbackFilter pac4jCallbackFilter() throws Exception {
 			
 			Pac4jPreAuthenticationCallbackFilter callbackFilter = new Pac4jPreAuthenticationCallbackFilter();
@@ -160,17 +160,28 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
-				.and()
-				.antMatcher(authcProperties.getPathPattern())
-				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
-				.antMatcher(callbackProperties.getPathPattern())
-				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
+			
+   	    	http.requestCache()
+   	        	.requestCache(requestCache)
+   	        	// 异常处理
+   	        	.and()
+   	        	.exceptionHandling()
+   	        	.authenticationEntryPoint(authenticationEntryPoint)
+   	        	.and()
+   	        	.httpBasic()
+   	        	.authenticationEntryPoint(authenticationEntryPoint)
+   	        	.and()
+   	        	.requestMatchers()
+ 				.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
+ 				.and()
+   	        	.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
+   	        	.addFilterBefore(pac4jCallbackFilter(), Pac4jPreAuthenticatedSecurityFilter.class);
 
-   	    	super.configure(http, authcProperties.getCros());
+   	    	super.configure(http, authcProperties.getCors());
    	    	super.configure(http, authcProperties.getCsrf());
    	    	super.configure(http, authcProperties.getHeaders());
 	    	super.configure(http);
+	    	 
 		}
 		
 		@Override
