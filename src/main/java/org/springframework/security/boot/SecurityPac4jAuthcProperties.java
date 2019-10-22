@@ -16,6 +16,10 @@
 package org.springframework.security.boot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.security.boot.biz.property.SecurityHeaderCrosProperties;
+import org.springframework.security.boot.biz.property.SecurityHeaderCsrfProperties;
+import org.springframework.security.boot.biz.property.SecurityHeadersProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,5 +35,14 @@ public class SecurityPac4jAuthcProperties {
 
 	/** Authorization Path Pattern */
 	private String pathPattern = "/login/pac4j";
+
+	@NestedConfigurationProperty
+	private SecurityHeadersProperties headers = new SecurityHeadersProperties();
+
+	@NestedConfigurationProperty
+	private SecurityHeaderCrosProperties cros = new SecurityHeaderCrosProperties();
+	
+	@NestedConfigurationProperty
+	private SecurityHeaderCsrfProperties csrf = new SecurityHeaderCsrfProperties();
 
 }

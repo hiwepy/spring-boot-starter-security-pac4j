@@ -1,7 +1,5 @@
 package org.springframework.security.boot;
 
-import java.util.Arrays;
-
 import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
@@ -19,7 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
@@ -28,6 +25,8 @@ import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @AutoConfigureAfter(Pac4jAutoConfiguration.class)
@@ -71,8 +70,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	static class Pac4jWebSecurityConfigurationAdapter extends SecurityBizConfigurerAdapter {
 
 		private final Pac4jProperties pac4jProperties;
-		private final SecurityPac4jAuthcProperties pac4jAuthcProperties;
-		private final SecurityPac4jCallbackProperties pac4jCallbackProperties;
+		private final SecurityPac4jAuthcProperties authcProperties;
+		private final SecurityPac4jCallbackProperties callbackProperties;
 		private final ServerProperties serverProperties;
 		
 		private final AuthenticationManager authenticationManager;
@@ -87,16 +86,18 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ServerProperties serverProperties,
 				
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
+				ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider,
+   				ObjectProvider<CorsConfigurationSource> configurationSourceProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider
 				
 			) {
 			
-			super(bizProperties);
+			super(bizProperties, csrfTokenRepositoryProvider.getIfAvailable(), configurationSourceProvider.getIfAvailable());
 			
 			this.pac4jProperties = pac4jProperties;
-			this.pac4jAuthcProperties = pac4jAuthcProperties;
-			this.pac4jCallbackProperties = pac4jCallbackProperties;
+			this.authcProperties = pac4jAuthcProperties;
+			this.callbackProperties = pac4jCallbackProperties;
 			this.serverProperties = serverProperties;
 			
 			this.authenticationManager = authenticationManagerProvider.getIfAvailable();
@@ -118,8 +119,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 			Pac4jPreAuthenticatedSecurityFilter securityFilter = new Pac4jPreAuthenticatedSecurityFilter();  
 			
 			securityFilter.setAuthenticationManager(authenticationManagerBean());
-			if (StringUtils.hasText(pac4jAuthcProperties.getPathPattern())) {
-				securityFilter.setFilterProcessesUrl(pac4jAuthcProperties.getPathPattern());
+			if (StringUtils.hasText(authcProperties.getPathPattern())) {
+				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
 			}
 			
 			// List of authorizers
@@ -144,8 +145,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 			Pac4jPreAuthenticationCallbackFilter callbackFilter = new Pac4jPreAuthenticationCallbackFilter();
 		    
 			callbackFilter.setAuthenticationManager(authenticationManager());
-			if (StringUtils.hasText(pac4jCallbackProperties.getPathPattern())) {
-				callbackFilter.setFilterProcessesUrl(pac4jCallbackProperties.getPathPattern());
+			if (StringUtils.hasText(callbackProperties.getPathPattern())) {
+				callbackFilter.setFilterProcessesUrl(callbackProperties.getPathPattern());
 			}
 			
 		    // Security Configuration
@@ -163,11 +164,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 		public void configure(HttpSecurity http) throws Exception {
 			http.exceptionHandling().authenticationEntryPoint(pac4jEntryPoint)
 				.and()
-				.antMatcher(pac4jAuthcProperties.getPathPattern())
+				.antMatcher(authcProperties.getPathPattern())
 				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
-				.antMatcher(pac4jCallbackProperties.getPathPattern())
+				.antMatcher(callbackProperties.getPathPattern())
 				.addFilterBefore(pac4jCallbackFilter(), BasicAuthenticationFilter.class);
-			super.configure(http);
+
+   	    	super.configure(http, authcProperties.getCros());
+   	    	super.configure(http, authcProperties.getCsrf());
+   	    	super.configure(http, authcProperties.getHeaders());
+	    	super.configure(http);
 		}
 		
 		@Override
