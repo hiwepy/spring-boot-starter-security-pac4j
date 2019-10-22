@@ -26,7 +26,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @AutoConfigureAfter(Pac4jAutoConfiguration.class)
@@ -87,13 +86,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 				
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
 				ObjectProvider<CsrfTokenRepository> csrfTokenRepositoryProvider,
-   				ObjectProvider<CorsConfigurationSource> configurationSourceProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<Pac4jEntryPoint> pac4jEntryPointProvider
 				
 			) {
 			
-			super(bizProperties, csrfTokenRepositoryProvider.getIfAvailable(), configurationSourceProvider.getIfAvailable());
+			super(bizProperties, csrfTokenRepositoryProvider.getIfAvailable());
 			
 			this.pac4jProperties = pac4jProperties;
 			this.authcProperties = pac4jAuthcProperties;
