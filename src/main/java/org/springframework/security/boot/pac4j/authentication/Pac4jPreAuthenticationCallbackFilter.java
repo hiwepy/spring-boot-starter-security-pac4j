@@ -111,11 +111,16 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
     	final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
     	
         if (mustApply(context)) {
+        	
         	CommonHelper.assertNotNull("callbackLogic", this.callbackLogic);
-            callbackLogic.perform(context, this.config, JEEHttpActionAdapter.INSTANCE, this.defaultUrl, this.saveInSession,
-                    this.multiProfile, this.renewSession, this.defaultClient);
+        	
+			callbackLogic.perform(context, this.config, JEEHttpActionAdapter.INSTANCE,
+					this.defaultUrl, this.saveInSession, this.multiProfile, this.renewSession, this.defaultClient);
+			
         } else {
+        	
         	filterChain.doFilter(request, response);
+        	
         }
         
     }

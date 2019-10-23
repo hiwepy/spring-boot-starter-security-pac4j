@@ -31,6 +31,7 @@ import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.spring.boot.ext.client.FrontendProxyReceptor;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -53,6 +54,8 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
     private Boolean multiProfile;
 
 	private RequestMatcher requiresAuthenticationRequestMatcher;
+	
+	private FrontendProxyReceptor proxyReceptor;
 
     public Pac4jPreAuthenticatedSecurityFilter() {
         securityLogic = new DefaultSecurityLogic<>();
@@ -96,13 +99,15 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 
         final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
         
-        securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
-        	
-            filterChain.doFilter(request, response);
-            
-            return null;
-
-        }, JEEHttpActionAdapter.INSTANCE, this.clients, this.authorizers, this.matchers, this.multiProfile);
+		securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
+			// 前后端分离模式下的前端跳转代理：解决认证成功后携带认证信息到前端服务问题
+			if (proxyReceptor != null) {
+				return proxyReceptor.redirect(context);
+			} else {
+				filterChain.doFilter(request, response);
+				return null;
+			}
+		}, JEEHttpActionAdapter.INSTANCE, this.clients, this.authorizers, this.matchers, this.multiProfile);
 		
 	}
 
@@ -114,6 +119,14 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		return "N/A";
 	}
 	
+	public FrontendProxyReceptor getProxyReceptor() {
+		return proxyReceptor;
+	}
+
+	public void setProxyReceptor(FrontendProxyReceptor proxyReceptor) {
+		this.proxyReceptor = proxyReceptor;
+	}
+
 	public SecurityLogic<Object, JEEContext> getSecurityLogic() {
         return securityLogic;
     }

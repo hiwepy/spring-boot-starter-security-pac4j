@@ -32,5 +32,18 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 
 	/** Authorization Path Pattern */
 	private String pathPattern = "/login/pac4j";
-
+	
+	/**
+	 * Whether Enable Front-end Authorization Proxy. 
+	 */
+	private boolean frontendProxy = false;
+	
+	/**
+	 * The location of the front-end server login URL, 
+	 * i.e. 
+	 * http://localhost:8080/#/client?target=/portal
+	 * http://localhost:8080/#/client?client_name=cas&target=/portal
+	 */
+	private String frontendUrl;
+	
 }
