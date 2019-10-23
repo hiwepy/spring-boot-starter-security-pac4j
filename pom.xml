@@ -500,12 +500,12 @@
 		    <artifactId>pac4j-config</artifactId>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/org.pac4j/spring-security-pac4j -->
+		<!-- https://mvnrepository.com/artifact/org.pac4j/spring-security-pac4j
 		<dependency>
 		    <groupId>org.pac4j</groupId>
 		    <artifactId>spring-security-pac4j</artifactId>
 		    <version>4.1.0</version>
-		</dependency>
+		</dependency> -->
 		 
 	</dependencies>
 
