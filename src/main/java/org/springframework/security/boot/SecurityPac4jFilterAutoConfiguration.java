@@ -198,8 +198,9 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 		
 		@Override
-   	    public void configure(WebSecurity web) throws Exception {
-   	    }
+	    public void configure(WebSecurity web) throws Exception {
+	    	super.configure(web);
+	    }
 
 	}
 
