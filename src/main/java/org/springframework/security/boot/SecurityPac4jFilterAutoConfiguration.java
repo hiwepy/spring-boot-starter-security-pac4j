@@ -3,13 +3,9 @@ package org.springframework.security.boot;
 import java.util.stream.Collectors;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
-import org.pac4j.spring.boot.ext.client.FrontendProxyReceptor;
-import org.pac4j.spring.boot.ext.http.callback.QueryParameterCallbackUrlExtResolver;
-import org.pac4j.spring.boot.ext.redirect.FrontendRedirectionActionBuilder;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -118,21 +114,6 @@ public class SecurityPac4jFilterAutoConfiguration {
    			
 		}
 
-		protected RedirectionActionBuilder redirectionActionBuilder() {
-			FrontendRedirectionActionBuilder redirectionActionBuilder = new FrontendRedirectionActionBuilder();
-			redirectionActionBuilder.setCallbackUrl(authcProperties.getFrontendUrl());
-			redirectionActionBuilder.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
-			return redirectionActionBuilder;
-		}
-		
-		protected FrontendProxyReceptor frontendProxyReceptor() {
-			FrontendProxyReceptor proxyReceptor = new FrontendProxyReceptor();
-			proxyReceptor.setCallbackUrl(authcProperties.getFrontendUrl());
-			proxyReceptor.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
-			proxyReceptor.setRedirectionActionBuilder(redirectionActionBuilder());
-			return proxyReceptor;
-		}
-		
 		/**
 		 * 权限控制过滤器 ：实现权限认证
 		 */
@@ -143,10 +124,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 			securityFilter.setAuthenticationManager(authenticationManagerBean());
 			if (StringUtils2.hasText(authcProperties.getPathPattern())) {
 				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
-			}
-			// 前后端分离
-			if(authcProperties.isFrontendProxy()) {
-				securityFilter.setProxyReceptor(this.frontendProxyReceptor());
 			}
 			// List of authorizers
 			securityFilter.setAuthorizers(pac4jProperties.getAuthorizers());
@@ -176,15 +153,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
 	        
-	        // 前后端分离模式
-	        if(authcProperties.isFrontendProxy()) {
-	        	callbackFilter.setDefaultUrl( authcProperties.getFrontendUrl() );
-	        } else {
-	        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
-		        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
-		        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(defaultUrl, pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
-		        callbackFilter.setDefaultUrl( callbackUrl );
-			}
+        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
+	        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
+	        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(defaultUrl, pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
+	        callbackFilter.setDefaultUrl( callbackUrl );
 	        
 	        // Whether multiple profiles should be kept
 	        callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
