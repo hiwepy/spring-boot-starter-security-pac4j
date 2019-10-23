@@ -32,4 +32,6 @@ public class SecurityPac4jCallbackProperties {
 	/** Callback Path Pattern */
 	private String pathPattern = "/login/callback";
 
+    private String defaultUrl;
+    
 }

@@ -52,7 +52,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		// Security Configuration
 		logoutHandler.setConfig(config);
         // Default logourl url
-		String logoutUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getLogoutUrl());
+		String logoutUrl = Pac4jUrlUtils.constructRedirectUrl(logoutProperties.getDefaultUrl(), pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
 		logoutHandler.setDefaultUrl(logoutUrl);
         // Whether the Session must be destroyed（是否销毁Session）
 		logoutHandler.setDestroySession(logoutProperties.isDestroySession());
@@ -150,7 +150,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
 	        // Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
-	        String callbackUrl = Pac4jUrlUtils.constructCallbackUrl(serverProperties.getServlet().getContextPath(), pac4jProperties.getCallbackUrl());
+	        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(callbackProperties.getDefaultUrl(), pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
 	        callbackFilter.setDefaultUrl( callbackUrl );
 	        // Whether multiple profiles should be kept
 	        callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
