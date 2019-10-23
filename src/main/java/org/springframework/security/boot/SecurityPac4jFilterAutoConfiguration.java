@@ -6,6 +6,7 @@ import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
+import org.pac4j.spring.boot.ext.http.callback.QueryParameterCallbackUrlExtResolver;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -20,6 +21,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
+import org.springframework.security.boot.biz.userdetails.UserDetailsServiceAdapter;
+import org.springframework.security.boot.pac4j.FrontendProxyReceptor;
+import org.springframework.security.boot.pac4j.FrontendRedirectionActionBuilder;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
@@ -65,6 +70,26 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    return logoutHandler;
 	}
 	
+	@Bean
+	public FrontendRedirectionActionBuilder redirectionActionBuilder(SecurityPac4jAuthcProperties authcProperties,
+			JwtPayloadRepository jwtPayloadRepository, UserDetailsServiceAdapter userDetailsService) {
+		FrontendRedirectionActionBuilder redirectionActionBuilder = new FrontendRedirectionActionBuilder();
+		redirectionActionBuilder.setCallbackUrl(authcProperties.getFrontendUrl());
+		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
+		redirectionActionBuilder.setUserDetailsService(userDetailsService);
+		return redirectionActionBuilder;
+	}
+
+	@Bean
+	public FrontendProxyReceptor frontendProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
+			FrontendRedirectionActionBuilder redirectionActionBuilder) {
+		FrontendProxyReceptor proxyReceptor = new FrontendProxyReceptor();
+		proxyReceptor.setCallbackUrl(authcProperties.getFrontendUrl());
+		proxyReceptor.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
+		proxyReceptor.setRedirectionActionBuilder(redirectionActionBuilder);
+		return proxyReceptor;
+	}
+	
 	@Configuration
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
@@ -81,7 +106,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    private final LogoutHandler logoutHandler;
 	    private final Pac4jEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
-		
+    	private final FrontendProxyReceptor frontendProxyReceptor;
+    	    
 		public Pac4jWebSecurityConfigurationAdapter(
 				
 				SecurityBizProperties bizProperties,
@@ -92,6 +118,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 				
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
+				ObjectProvider<FrontendProxyReceptor> frontendProxyReceptorProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<LogoutHandler> logoutHandlerProvider,
 				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider
@@ -106,14 +133,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.callbackProperties = callbackProperties;
 			this.pac4jLogoutProperties = pac4jLogoutProperties;
 			
+			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
+			this.frontendProxyReceptor = frontendProxyReceptorProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
 			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
-			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
-			
    			this.requestCache = super.requestCache();
    			
 		}
 
+		
 		/**
 		 * 权限控制过滤器 ：实现权限认证
 		 */
@@ -124,6 +152,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 			securityFilter.setAuthenticationManager(authenticationManagerBean());
 			if (StringUtils2.hasText(authcProperties.getPathPattern())) {
 				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
+			}
+			// 前后端分离
+			if(authcProperties.isFrontendProxy() && frontendProxyReceptor != null) {
+				securityFilter.setProxyReceptor(frontendProxyReceptor);
 			}
 			// List of authorizers
 			securityFilter.setAuthorizers(pac4jProperties.getAuthorizers());
@@ -153,10 +185,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
 	        
-        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
-	        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
-	        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(defaultUrl, pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
-	        callbackFilter.setDefaultUrl( callbackUrl );
+	        // 前后端分离模式
+	        if(authcProperties.isFrontendProxy()) {
+	        	callbackFilter.setDefaultUrl( authcProperties.getFrontendUrl() );
+	        } else {
+	        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
+		        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
+		        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(defaultUrl, pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
+		        callbackFilter.setDefaultUrl( callbackUrl );
+			}
 	        
 	        // Whether multiple profiles should be kept
 	        callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
