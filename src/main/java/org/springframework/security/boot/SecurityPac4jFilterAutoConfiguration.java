@@ -24,9 +24,10 @@ import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthentica
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
 import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
-import org.springframework.security.boot.utils.StringUtils;
+import org.springframework.security.boot.utils.StringUtils2;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.savedrequest.RequestCache;
 
@@ -52,14 +53,14 @@ public class SecurityPac4jFilterAutoConfiguration {
 		// Security Configuration
 		logoutHandler.setConfig(config);
         // Default logourl url
-		String logoutUrl = Pac4jUrlUtils.constructRedirectUrl(logoutProperties.getDefaultUrl(), pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
-		logoutHandler.setDefaultUrl(logoutUrl);
+		String defaultUrl = StringUtils2.defaultString(pac4jProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
+		logoutHandler.setDefaultUrl(defaultUrl);
         // Whether the Session must be destroyed（是否销毁Session）
 		logoutHandler.setDestroySession(logoutProperties.isDestroySession());
         // Whether the application logout must be performed（是否注销本地应用身份认证）
 		logoutHandler.setLocalLogout(logoutProperties.isLocalLogout());
-        // Pattern that logout urls must match（注销登录路径规则，用于匹配登录请求操作）
-		logoutHandler.setLogoutUrlPattern(logoutProperties.getLogoutUrlPattern());
+        // Pattern that logout urls must match（注销登录路径规则，用于匹配注销请求操作）
+		logoutHandler.setLogoutUrlPattern(logoutProperties.getPathPattern());
 		
 	    return logoutHandler;
 	}
@@ -72,11 +73,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 	static class Pac4jWebSecurityConfigurationAdapter extends SecurityBizConfigurerAdapter {
 
 		private final Pac4jProperties pac4jProperties;
+		private final Pac4jLogoutProperties pac4jLogoutProperties;
 		private final SecurityPac4jAuthcProperties authcProperties;
 		private final SecurityPac4jCallbackProperties callbackProperties;
-		private final ServerProperties serverProperties;
 		
 	    private final Config pac4jConfig;
+	    private final LogoutHandler logoutHandler;
 	    private final Pac4jEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
 		
@@ -86,11 +88,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 				SecurityPac4jAuthcProperties authcProperties,
 				SecurityPac4jCallbackProperties callbackProperties,
 				Pac4jProperties pac4jProperties,
-				ServerProperties serverProperties,
+				Pac4jLogoutProperties pac4jLogoutProperties,
 				
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
+				ObjectProvider<LogoutHandler> logoutHandlerProvider,
 				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider
 				
 			) {
@@ -101,9 +104,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.pac4jProperties = pac4jProperties;
 			this.authcProperties = authcProperties;
 			this.callbackProperties = callbackProperties;
-			this.serverProperties = serverProperties;
+			this.pac4jLogoutProperties = pac4jLogoutProperties;
 			
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
+			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
 			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
 			
    			this.requestCache = super.requestCache();
@@ -118,7 +122,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			Pac4jPreAuthenticatedSecurityFilter securityFilter = new Pac4jPreAuthenticatedSecurityFilter();  
 			
 			securityFilter.setAuthenticationManager(authenticationManagerBean());
-			if (StringUtils.hasText(authcProperties.getPathPattern())) {
+			if (StringUtils2.hasText(authcProperties.getPathPattern())) {
 				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
 			}
 			
@@ -143,7 +147,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			Pac4jPreAuthenticationCallbackFilter callbackFilter = new Pac4jPreAuthenticationCallbackFilter();
 		    
 			callbackFilter.setAuthenticationManager(authenticationManager());
-			if (StringUtils.hasText(callbackProperties.getPathPattern())) {
+			if (StringUtils2.hasText(callbackProperties.getPathPattern())) {
 				callbackFilter.setFilterProcessesUrl(callbackProperties.getPathPattern());
 			}
 			
@@ -163,6 +167,14 @@ public class SecurityPac4jFilterAutoConfiguration {
 			
    	    	http.requestCache()
    	        	.requestCache(requestCache)
+   	        	// Session 注销配置
+   	    		.and()
+   	    		.logout()
+   	    		.logoutUrl(pac4jLogoutProperties.getPathPattern())
+   	    		.logoutSuccessUrl(StringUtils2.defaultString(pac4jProperties.getDefaultUrl(), pac4jProperties.getServiceUrl()))
+   	    		.addLogoutHandler(logoutHandler)
+   	    		.clearAuthentication(true)
+   	    		.invalidateHttpSession(true)
    	        	// 异常处理
    	        	.and()
    	        	.exceptionHandling()
