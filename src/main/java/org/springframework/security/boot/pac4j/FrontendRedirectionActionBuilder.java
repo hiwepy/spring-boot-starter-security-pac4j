@@ -63,6 +63,9 @@ public class FrontendRedirectionActionBuilder implements RedirectionActionBuilde
     public Optional<RedirectionAction> redirect(final WebContext context) {
     	
     	CommonHelper.assertNotNull("callbackUrl", callbackUrl);
+    	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
+    	CommonHelper.assertNotNull("userDetailsService", userDetailsService);
+    	CommonHelper.assertNotNull("userDetailsChecker", userDetailsChecker);
     	
     	// 获取上下文
     	JEEContext jeeContext = (JEEContext) context;
