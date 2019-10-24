@@ -49,11 +49,11 @@ public class FrontendRedirectionActionBuilder implements RedirectionActionBuilde
   	 * http://localhost:8080/#/client?target=/portal
   	 * http://localhost:8080/#/client?client_name=cas&target=/portal
   	 */
-    protected String callbackUrl;
+    private String callbackUrl;
 
-    protected JwtPayloadRepository jwtPayloadRepository;
-    protected UserDetailsServiceAdapter userDetailsService;
-    protected UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
+    private JwtPayloadRepository jwtPayloadRepository;
+    private UserDetailsServiceAdapter userDetailsService;
+    private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
     
     
     public FrontendRedirectionActionBuilder() {
