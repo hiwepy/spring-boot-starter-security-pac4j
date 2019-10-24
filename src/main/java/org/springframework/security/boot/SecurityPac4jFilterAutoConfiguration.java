@@ -9,6 +9,7 @@ import org.pac4j.spring.boot.Pac4jProperties;
 import org.pac4j.spring.boot.ext.http.callback.QueryParameterCallbackUrlExtResolver;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -72,7 +73,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	
 	@Bean
 	public FrontendRedirectionActionBuilder redirectionActionBuilder(SecurityPac4jAuthcProperties authcProperties,
-			JwtPayloadRepository jwtPayloadRepository, UserDetailsServiceAdapter userDetailsService) {
+			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, UserDetailsServiceAdapter userDetailsService) {
 		FrontendRedirectionActionBuilder redirectionActionBuilder = new FrontendRedirectionActionBuilder();
 		redirectionActionBuilder.setCallbackUrl(authcProperties.getFrontendUrl());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
