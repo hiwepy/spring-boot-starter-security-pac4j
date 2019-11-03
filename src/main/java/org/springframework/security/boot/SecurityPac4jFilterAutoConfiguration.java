@@ -3,10 +3,10 @@ package org.springframework.security.boot;
 import java.util.stream.Collectors;
 
 import org.pac4j.core.config.Config;
+import org.pac4j.core.ext.http.callback.QueryParameterCallbackUrlExtResolver;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
-import org.pac4j.spring.boot.ext.http.callback.QueryParameterCallbackUrlExtResolver;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
