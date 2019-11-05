@@ -36,7 +36,7 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 	/**
 	 * Whether Enable Front-end Authorization Proxy. 
 	 */
-	private boolean frontendProxy = false;
+	private boolean authzProxy = false;
 	
 	/**
 	 * The location of the front-end server login URL, 
@@ -44,6 +44,6 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 	 * http://localhost:8080/#/client?target=/portal
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
-	private String frontendUrl;
+	private String authzProxyUrl;
 	
 }

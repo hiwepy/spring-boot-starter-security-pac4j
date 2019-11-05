@@ -78,7 +78,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			UserDetailsServiceAdapter userDetailsService) {
 		
 		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
-		redirectionActionBuilder.setCallbackUrl(authcProperties.getFrontendUrl());
+		redirectionActionBuilder.setCallbackUrl(authcProperties.getAuthzProxyUrl());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
 		redirectionActionBuilder.setUserDetailsService(userDetailsService);
 		
@@ -87,7 +87,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		ajaxRequestResolver.setUserDetailsService(userDetailsService);
 		
 		Pac4jProxyReceptor proxyReceptor = new Pac4jProxyReceptor();
-		proxyReceptor.setCallbackUrl(authcProperties.getFrontendUrl());
+		proxyReceptor.setCallbackUrl(authcProperties.getAuthzProxyUrl());
 		proxyReceptor.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
 		proxyReceptor.setAjaxRequestResolver(ajaxRequestResolver);
 		proxyReceptor.setRedirectionActionBuilder(redirectionActionBuilder);
@@ -158,7 +158,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
 			}
 			// 前后端分离
-			if(authcProperties.isFrontendProxy() && pac4jProxyReceptor != null) {
+			if(authcProperties.isAuthzProxy() && pac4jProxyReceptor != null) {
 				securityFilter.setProxyReceptor(pac4jProxyReceptor);
 			}
 			// List of authorizers
@@ -190,8 +190,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	        callbackFilter.setConfig(pac4jConfig);
 	        
 	        // 前后端分离模式
-	        if(authcProperties.isFrontendProxy()) {
-	        	callbackFilter.setDefaultUrl( authcProperties.getFrontendUrl() );
+	        if(authcProperties.isAuthzProxy()) {
+	        	callbackFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );
 	        } else {
 	        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
 		        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
