@@ -31,7 +31,7 @@ import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
-import org.springframework.security.boot.pac4j.FrontendProxyReceptor;
+import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -55,7 +55,9 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 
 	private RequestMatcher requiresAuthenticationRequestMatcher;
 	
-	private FrontendProxyReceptor proxyReceptor;
+	private Pac4jProxyReceptor proxyReceptor;
+	
+	private Pac4jAuthorizationTokenGenerator tokenGenerator;
 
     public Pac4jPreAuthenticatedSecurityFilter() {
         securityLogic = new DefaultSecurityLogic<>();
@@ -103,7 +105,9 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 			// 前后端分离模式下的前端跳转代理：解决认证成功后携带认证信息到前端服务问题
 			if (proxyReceptor != null) {
 				return proxyReceptor.redirect(context);
-			} else {
+			} 
+			
+			else {
 				filterChain.doFilter(request, response);
 				return null;
 			}
@@ -119,11 +123,19 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		return "N/A";
 	}
 	
-	public FrontendProxyReceptor getProxyReceptor() {
+	public Pac4jProxyReceptor getProxyReceptor() {
 		return proxyReceptor;
 	}
+	
+	public Pac4jAuthorizationTokenGenerator getTokenGenerator() {
+		return tokenGenerator;
+	}
 
-	public void setProxyReceptor(FrontendProxyReceptor proxyReceptor) {
+	public void setTokenGenerator(Pac4jAuthorizationTokenGenerator tokenGenerator) {
+		this.tokenGenerator = tokenGenerator;
+	}
+
+	public void setProxyReceptor(Pac4jProxyReceptor proxyReceptor) {
 		this.proxyReceptor = proxyReceptor;
 	}
 

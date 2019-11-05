@@ -24,12 +24,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
 import org.springframework.security.boot.biz.userdetails.UserDetailsServiceAdapter;
-import org.springframework.security.boot.pac4j.FrontendProxyReceptor;
-import org.springframework.security.boot.pac4j.FrontendRedirectionActionBuilder;
+import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionActionBuilder;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
 import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
+import org.springframework.security.boot.pac4j.http.ajax.Pac4jAjaxRequestResolver;
 import org.springframework.security.boot.utils.StringUtils2;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -72,21 +73,23 @@ public class SecurityPac4jFilterAutoConfiguration {
 	}
 	
 	@Bean
-	public FrontendRedirectionActionBuilder redirectionActionBuilder(SecurityPac4jAuthcProperties authcProperties,
-			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, UserDetailsServiceAdapter userDetailsService) {
-		FrontendRedirectionActionBuilder redirectionActionBuilder = new FrontendRedirectionActionBuilder();
+	public Pac4jProxyReceptor pac4jProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
+			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, 
+			UserDetailsServiceAdapter userDetailsService) {
+		
+		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
 		redirectionActionBuilder.setCallbackUrl(authcProperties.getFrontendUrl());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
 		redirectionActionBuilder.setUserDetailsService(userDetailsService);
-		return redirectionActionBuilder;
-	}
-
-	@Bean
-	public FrontendProxyReceptor frontendProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
-			FrontendRedirectionActionBuilder redirectionActionBuilder) {
-		FrontendProxyReceptor proxyReceptor = new FrontendProxyReceptor();
+		
+		Pac4jAjaxRequestResolver ajaxRequestResolver = new Pac4jAjaxRequestResolver();
+		ajaxRequestResolver.setJwtPayloadRepository(jwtPayloadRepository);
+		ajaxRequestResolver.setUserDetailsService(userDetailsService);
+		
+		Pac4jProxyReceptor proxyReceptor = new Pac4jProxyReceptor();
 		proxyReceptor.setCallbackUrl(authcProperties.getFrontendUrl());
 		proxyReceptor.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
+		proxyReceptor.setAjaxRequestResolver(ajaxRequestResolver);
 		proxyReceptor.setRedirectionActionBuilder(redirectionActionBuilder);
 		return proxyReceptor;
 	}
@@ -107,7 +110,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    private final LogoutHandler logoutHandler;
 	    private final Pac4jEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
-    	private final FrontendProxyReceptor frontendProxyReceptor;
+    	private final Pac4jProxyReceptor pac4jProxyReceptor;
     	    
 		public Pac4jWebSecurityConfigurationAdapter(
 				
@@ -119,7 +122,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 				
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
-				ObjectProvider<FrontendProxyReceptor> frontendProxyReceptorProvider,
+				ObjectProvider<Pac4jProxyReceptor> pac4jProxyReceptorProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<LogoutHandler> logoutHandlerProvider,
 				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider
@@ -135,7 +138,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.pac4jLogoutProperties = pac4jLogoutProperties;
 			
 			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
-			this.frontendProxyReceptor = frontendProxyReceptorProvider.getIfAvailable();
+			this.pac4jProxyReceptor = pac4jProxyReceptorProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
 			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
    			this.requestCache = super.requestCache();
@@ -155,8 +158,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 				securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
 			}
 			// 前后端分离
-			if(authcProperties.isFrontendProxy() && frontendProxyReceptor != null) {
-				securityFilter.setProxyReceptor(frontendProxyReceptor);
+			if(authcProperties.isFrontendProxy() && pac4jProxyReceptor != null) {
+				securityFilter.setProxyReceptor(pac4jProxyReceptor);
 			}
 			// List of authorizers
 			securityFilter.setAuthorizers(pac4jProperties.getAuthorizers());

@@ -32,15 +32,15 @@ import org.slf4j.LoggerFactory;
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
 
-public class FrontendProxyReceptor extends IndirectClient<TokenCredentials> {
+public class Pac4jProxyReceptor extends IndirectClient<TokenCredentials> {
 
     public static final String PARAM_PROXY_TARGET = "target";
 
-    private static final Logger logger = LoggerFactory.getLogger(FrontendProxyReceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(Pac4jProxyReceptor.class);
     
     @Override
     protected void clientInit() {
-
+    	
         defaultCredentialsExtractor(ctx -> {
         	
             final Optional<String> proxyTarget = ctx.getRequestParameter(PARAM_PROXY_TARGET);

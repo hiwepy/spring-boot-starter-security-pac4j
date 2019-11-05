@@ -13,18 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.springframework.security.boot.pac4j;
+package org.springframework.security.boot.pac4j.http.ajax;
 
-import java.util.Optional;
-
-import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.core.exception.http.RedirectionAction;
+import org.pac4j.core.exception.http.HttpAction;
+import org.pac4j.core.exception.http.OkAction;
+import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
 import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.core.util.CommonHelper;
-import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
 import org.springframework.security.boot.biz.userdetails.SecurityPrincipal;
@@ -39,37 +35,19 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
  * TODO
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
-public class FrontendRedirectionActionBuilder implements RedirectionActionBuilder {
-
-    private static final Logger logger = LoggerFactory.getLogger(FrontendRedirectionActionBuilder.class);
-    
-    /**
-  	 * The location of the front-end server login URL, 
-  	 * i.e. 
-  	 * http://localhost:8080/#/client?target=/portal
-  	 * http://localhost:8080/#/client?client_name=cas&target=/portal
-  	 */
-    private String callbackUrl;
-
-    private JwtPayloadRepository jwtPayloadRepository;
+public class Pac4jAjaxRequestResolver extends DefaultAjaxRequestResolver {
+	
+	private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
-    
-    
-    public FrontendRedirectionActionBuilder() {
-    }
-    
-    @Override
-    public Optional<RedirectionAction> redirect(final WebContext context) {
-    	
-    	CommonHelper.assertNotNull("callbackUrl", callbackUrl);
+	
+	@Override
+	public HttpAction buildAjaxResponse(final WebContext context, final RedirectionActionBuilder redirectionActionBuilder) {
+        
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
     	CommonHelper.assertNotNull("userDetailsService", userDetailsService);
     	CommonHelper.assertNotNull("userDetailsChecker", userDetailsChecker);
     	
-    	// 获取上下文
-    	JEEContext jeeContext = (JEEContext) context;
-
     	// 获取已经认证的对象
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CommonHelper.assertNotNull("authenticationToken", authentication);
@@ -91,24 +69,10 @@ public class FrontendRedirectionActionBuilder implements RedirectionActionBuilde
         
         // 签发jwt
     	String tokenString = getJwtPayloadRepository().issueJwt(authenticationToken);
-    	
-    	// 重定向
-        final String redirectionUrl = CommonHelper.addParameter(callbackUrl, "token", tokenString);
-        logger.debug("redirectionUrl: {}", redirectionUrl);
 
-    	Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrl);
-        
-        return Optional.empty();
+        return new OkAction(tokenString);
     }
-
-	public String getCallbackUrl() {
-		return callbackUrl;
-	}
-
-	public void setCallbackUrl(String callbackUrl) {
-		this.callbackUrl = callbackUrl;
-	}
- 
+	
 	public JwtPayloadRepository getJwtPayloadRepository() {
 		return jwtPayloadRepository;
 	}
