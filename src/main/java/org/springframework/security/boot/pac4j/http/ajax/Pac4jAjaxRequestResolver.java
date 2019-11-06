@@ -21,6 +21,8 @@ import org.pac4j.core.exception.http.OkAction;
 import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
 import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.core.util.CommonHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
 import org.springframework.security.boot.biz.userdetails.SecurityPrincipal;
@@ -37,10 +39,18 @@ import org.springframework.security.core.userdetails.UserDetailsChecker;
  */
 public class Pac4jAjaxRequestResolver extends DefaultAjaxRequestResolver {
 	
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
 	
+    @Override
+    public boolean isAjax(WebContext context) {
+    	boolean isAjax = super.isAjax(context);
+    	logger.debug("isAjax : {}", isAjax);
+    	return isAjax;
+    }
+    
 	@Override
 	public HttpAction buildAjaxResponse(final WebContext context, final RedirectionActionBuilder redirectionActionBuilder) {
         

@@ -31,6 +31,8 @@ import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
@@ -41,6 +43,8 @@ import org.springframework.util.Assert;
 
 public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticatedProcessingFilter {
 
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
+	
 	private SecurityLogic<Object, JEEContext> securityLogic;
 
     private Config config;
@@ -104,10 +108,14 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
 			// 前后端分离模式下的前端跳转代理：解决认证成功后携带认证信息到前端服务问题
 			if (proxyReceptor != null) {
+				logger.debug("proxyReceptor : {}", proxyReceptor.getClass());
 				return proxyReceptor.redirect(context);
 			} 
 			
 			else {
+				
+				logger.debug("filterChain doFilter: {}", filterChain.getClass());
+				
 				filterChain.doFilter(request, response);
 				return null;
 			}
