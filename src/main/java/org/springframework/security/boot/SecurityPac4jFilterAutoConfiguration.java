@@ -60,8 +60,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		// Security Configuration
 		logoutHandler.setConfig(config);
         // Default logourl url
-		String defaultUrl = StringUtils2.defaultString(pac4jProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
-		logoutHandler.setDefaultUrl(defaultUrl);
+		logoutHandler.setDefaultUrl(logoutProperties.getDefaultUrl());
         // Whether the Session must be destroyed（是否销毁Session）
 		logoutHandler.setDestroySession(logoutProperties.isDestroySession());
         // Whether the application logout must be performed（是否注销本地应用身份认证）
@@ -194,8 +193,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	        	callbackFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );
 	        } else {
 	        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
-		        String defaultUrl = StringUtils2.defaultString(callbackProperties.getDefaultUrl(), pac4jProperties.getServiceUrl());
-		        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(defaultUrl, pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
+		        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(callbackProperties.getDefaultUrl(), pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
 		        callbackFilter.setDefaultUrl( callbackUrl );
 			}
 	        
@@ -214,7 +212,7 @@ public class SecurityPac4jFilterAutoConfiguration {
    	    		.and()
    	    		.logout()
    	    		.logoutUrl(pac4jLogoutProperties.getPathPattern())
-   	    		.logoutSuccessUrl(StringUtils2.defaultString(pac4jProperties.getDefaultUrl(), pac4jProperties.getServiceUrl()))
+   	    		.logoutSuccessUrl(pac4jLogoutProperties.getDefaultUrl())
    	    		.addLogoutHandler(logoutHandler)
    	    		.clearAuthentication(true)
    	    		.invalidateHttpSession(true)
