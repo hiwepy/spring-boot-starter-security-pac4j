@@ -17,9 +17,9 @@ package org.springframework.security.boot.pac4j;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.core.exception.http.OkAction;
 import org.pac4j.core.exception.http.RedirectionAction;
 import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.core.util.CommonHelper;
@@ -51,6 +51,13 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
   	 * http://localhost:8080/#/client?client_name=cas&target=/portal
   	 */
     private String callbackUrl;
+    /**
+  	 * The location of the front-end server login URL, 
+  	 * i.e. 
+  	 * http://localhost:8080/#/client?target=/portal
+  	 * http://localhost:8080/#/client?client_name=cas&target=/portal
+  	 */
+    private String callbackH5Url;
 
     private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
@@ -63,7 +70,6 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     @Override
     public Optional<RedirectionAction> redirect(final WebContext context) {
     	
-    	CommonHelper.assertNotNull("callbackUrl", callbackUrl);
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
     	CommonHelper.assertNotNull("userDetailsService", userDetailsService);
     	CommonHelper.assertNotNull("userDetailsChecker", userDetailsChecker);
@@ -74,6 +80,14 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     	// 获取已经认证的对象
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CommonHelper.assertNotNull("authenticationToken", authentication);
+        
+        boolean isH5 = false;
+        Optional<String > optional = jeeContext.getRequestParameter("h5");
+        if(optional.isPresent()) {
+        	isH5 = BooleanUtils.toBoolean(optional.get());
+        }
+        
+        CommonHelper.assertNotNull("callbackUrl", isH5 ? callbackH5Url : callbackUrl);
         
         // 查询用户详情
         UserDetails ud = getUserDetailsService().loadUserDetails(authentication);
@@ -93,13 +107,11 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
         // 签发jwt
     	String tokenString = getJwtPayloadRepository().issueJwt(authenticationToken);
     	
-    	new OkAction(tokenString);
-    	
     	// 重定向
-        final String redirectionUrl = CommonHelper.addParameter(callbackUrl, "token", tokenString);
+        final String redirectionUrl = CommonHelper.addParameter(isH5 ? callbackH5Url : callbackUrl, "token", tokenString);
         logger.debug("redirectionUrl: {}", redirectionUrl);
-
-    	Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrl);
+        
+        Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrl);
         
         return Optional.empty();
     }
@@ -111,7 +123,15 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
 	public void setCallbackUrl(String callbackUrl) {
 		this.callbackUrl = callbackUrl;
 	}
- 
+	
+	public String getCallbackH5Url() {
+		return callbackH5Url;
+	}
+
+	public void setCallbackH5Url(String callbackH5Url) {
+		this.callbackH5Url = callbackH5Url;
+	}
+
 	public JwtPayloadRepository getJwtPayloadRepository() {
 		return jwtPayloadRepository;
 	}
