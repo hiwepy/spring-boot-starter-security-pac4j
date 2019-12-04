@@ -15,6 +15,9 @@
  */
 package org.springframework.security.boot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.boot.biz.property.SecurityAuthcProperties;
 
@@ -53,5 +56,10 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
 	private String authzProxyH5Url;
+	
+	/**
+	 * H5 Redirect List
+	 */
+	private List<String> h5RedirectList = new ArrayList<String>();
 	
 }

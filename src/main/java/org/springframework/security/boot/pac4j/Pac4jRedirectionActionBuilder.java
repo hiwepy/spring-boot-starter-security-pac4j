@@ -15,9 +15,11 @@
  */
 package org.springframework.security.boot.pac4j;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.http.RedirectionAction;
@@ -35,6 +37,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
+import org.springframework.util.CollectionUtils;
 
 /**
  * TODO
@@ -58,7 +61,7 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
   	 * http://localhost:8080/#/client?client_name=cas&target=/portal
   	 */
     private String callbackH5Url;
-
+    private List<String> h5RedirectList;
     private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
@@ -107,6 +110,16 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
         // 签发jwt
     	String tokenString = getJwtPayloadRepository().issueJwt(authenticationToken);
     	
+    	// 判断是否是H5网站
+    	if(!CollectionUtils.isEmpty(this.getH5RedirectList())) {
+    		for (String redirectionUrl : this.getH5RedirectList()) {
+    			if(StringUtils.startsWith(context.getPath(), redirectionUrl) || StringUtils.startsWith(context.getFullRequestURL(), redirectionUrl)) {
+    				isH5 = true;
+    				break;
+    			}
+			}
+    	}
+    	
     	// 重定向
         final String redirectionUrl = CommonHelper.addParameter(isH5 ? callbackH5Url : callbackUrl, "token", tokenString);
         logger.debug("redirectionUrl: {}", redirectionUrl);
@@ -130,6 +143,14 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
 
 	public void setCallbackH5Url(String callbackH5Url) {
 		this.callbackH5Url = callbackH5Url;
+	}
+
+	public List<String> getH5RedirectList() {
+		return h5RedirectList;
+	}
+
+	public void setH5RedirectList(List<String> h5RedirectList) {
+		this.h5RedirectList = h5RedirectList;
 	}
 
 	public JwtPayloadRepository getJwtPayloadRepository() {
