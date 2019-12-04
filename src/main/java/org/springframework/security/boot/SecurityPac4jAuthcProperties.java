@@ -57,6 +57,6 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 	/**
 	 * H5 Redirect Pattern
 	 */
-	 private String callbackH5UrlPattern = "/**/h5*";
+	 private String authzProxyH5UrlPattern = "/**/h5*";
 	
 }
