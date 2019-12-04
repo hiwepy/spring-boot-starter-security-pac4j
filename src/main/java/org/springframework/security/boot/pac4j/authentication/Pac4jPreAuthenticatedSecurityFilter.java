@@ -40,6 +40,7 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticatedProcessingFilter {
 
@@ -63,6 +64,11 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 	
 	private Pac4jAuthorizationTokenGenerator tokenGenerator;
 
+	/**
+	 * Define on which error URL the user will be redirected in case of an exception.
+	 */
+	private String errorUrl;
+	
     public Pac4jPreAuthenticatedSecurityFilter() {
         securityLogic = new DefaultSecurityLogic<>();
         ((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
@@ -104,7 +110,11 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		CommonHelper.assertNotNull("config", this.config);
 
         final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
-        
+
+        if(securityLogic instanceof DefaultSecurityLogic && StringUtils.hasText(errorUrl)) {
+        	((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setErrorUrl(errorUrl);
+        }
+
 		securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
 			// 前后端分离模式下的前端跳转代理：解决认证成功后携带认证信息到前端服务问题
 			if (proxyReceptor != null) {
@@ -195,7 +205,15 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
         this.multiProfile = multiProfile;
     }
     
-    /**
+    public String getErrorUrl() {
+		return errorUrl;
+	}
+
+	public void setErrorUrl(String errorUrl) {
+		this.errorUrl = errorUrl;
+	}
+
+	/**
 	 * Indicates whether this filter should attempt to process a login request for the
 	 * current invocation.
 	 * <p>

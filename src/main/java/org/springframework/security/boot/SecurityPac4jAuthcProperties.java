@@ -26,37 +26,40 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
+public class SecurityPac4jAuthcProperties extends SecurityAuthcProperties {
 
 	public static final String PREFIX = "spring.security.pac4j.authc";
 
 	/** Authorization Path Pattern */
 	private String pathPattern = "/login/pac4j";
-	
+
 	/**
-	 * Whether Enable Front-end Authorization Proxy. 
+	 * Whether Enable Front-end Authorization Proxy.
 	 */
 	private boolean authzProxy = false;
-	
+
 	/**
-	 * The location of the front-end server login URL, 
-	 * i.e. 
+	 * The location of the front-end server login URL, i.e.
 	 * http://localhost:8080/#/client?target=/portal
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
 	private String authzProxyUrl;
-	
+
 	/**
-	 * The location of the front-end server login URL, 
-	 * i.e. 
+	 * The location of the front-end server login URL, i.e.
 	 * http://localhost:8080/#/client?target=/portal
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
 	private String authzProxyH5Url;
-	
+
 	/**
 	 * H5 Redirect Pattern
 	 */
-	 private String authzProxyH5UrlPattern = "/**/h5*";
+	private String authzProxyH5UrlPattern = "/**/h5*";
+
+	/**
+	 * Define on which error URL the user will be redirected in case of an exception.
+	 */
+	private String errorUrl;
 	
 }
