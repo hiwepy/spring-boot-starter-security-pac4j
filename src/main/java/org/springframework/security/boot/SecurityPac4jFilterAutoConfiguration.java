@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
@@ -24,8 +25,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
 import org.springframework.security.boot.biz.userdetails.UserDetailsServiceAdapter;
+import org.springframework.security.boot.pac4j.DefaultPac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
 import org.springframework.security.boot.pac4j.Pac4jRedirectionActionBuilder;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticatedSecurityFilter;
 import org.springframework.security.boot.pac4j.authentication.Pac4jPreAuthenticationCallbackFilter;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
@@ -71,16 +74,23 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    return logoutHandler;
 	}
 	
+
+	@Bean
+	@ConditionalOnMissingBean
+	public Pac4jRedirectionUrlParser redirectionUrlParser() {
+		return new DefaultPac4jRedirectionUrlParser();
+	}
+	
 	@Bean
 	public Pac4jProxyReceptor pac4jProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
 			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, 
+			Pac4jRedirectionUrlParser redirectionUrlParser,
 			UserDetailsServiceAdapter userDetailsService) {
 		
 		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
 		redirectionActionBuilder.setCallbackUrl(authcProperties.getAuthzProxyUrl());
-		redirectionActionBuilder.setCallbackH5Url(authcProperties.getAuthzProxyH5Url());
-		redirectionActionBuilder.setH5RequestMatcher(authcProperties.getAuthzProxyH5UrlPattern());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
+		redirectionActionBuilder.setRedirectionUrlParser(redirectionUrlParser);
 		redirectionActionBuilder.setUserDetailsService(userDetailsService);
 		
 		Pac4jAjaxRequestResolver ajaxRequestResolver = new Pac4jAjaxRequestResolver();

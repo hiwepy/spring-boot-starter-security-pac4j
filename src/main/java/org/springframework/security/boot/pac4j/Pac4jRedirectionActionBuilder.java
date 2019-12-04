@@ -17,7 +17,6 @@ package org.springframework.security.boot.pac4j;
 
 import java.util.Optional;
 
-import org.apache.commons.lang3.BooleanUtils;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.http.RedirectionAction;
@@ -35,9 +34,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.util.Assert;
 
 /**
  * TODO
@@ -54,17 +50,10 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
   	 * http://localhost:8080/#/client?client_name=cas&target=/portal
   	 */
     private String callbackUrl;
-    /**
-  	 * The location of the front-end server login URL, 
-  	 * i.e. 
-  	 * http://localhost:8080/#/client?target=/portal
-  	 * http://localhost:8080/#/client?client_name=cas&target=/portal
-  	 */
-    private String callbackH5Url;
     private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
-    private RequestMatcher h5RequestMatcher;
+    private Pac4jRedirectionUrlParser redirectionUrlParser; 
     
     public Pac4jRedirectionActionBuilder() {
     }
@@ -82,18 +71,6 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     	// 获取已经认证的对象
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CommonHelper.assertNotNull("authenticationToken", authentication);
-        
-        boolean isH5 = false;
-        Optional<String > optional = jeeContext.getRequestParameter("h5");
-        if(optional.isPresent()) {
-        	isH5 = BooleanUtils.toBoolean(optional.get());
-        } 
-        // 判断是否是H5网站
-        else if( null != h5RequestMatcher && h5RequestMatcher.matches(jeeContext.getNativeRequest())) {
-			isH5 = true;
-    	}
-        
-        CommonHelper.assertNotNull("callbackUrl", isH5 ? callbackH5Url : callbackUrl);
         
         // 查询用户详情
         UserDetails ud = getUserDetailsService().loadUserDetails(authentication);
@@ -113,14 +90,24 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
         // 签发jwt
     	String tokenString = getJwtPayloadRepository().issueJwt(authenticationToken);
     	
-    	
+    	String redirectionUrl = null;
+        if( null != redirectionUrlParser) {
+     	    Optional<String> customRedirectionUrl = redirectionUrlParser.parser(jeeContext, authentication);
+     	    if(null != customRedirectionUrl && customRedirectionUrl.isPresent()) {
+     	    	redirectionUrl = customRedirectionUrl.get();
+     	    }
+     	}
+        if( null == redirectionUrl) {
+        	redirectionUrl = callbackUrl;
+        }
     	
     	// 重定向
-        final String redirectionUrl = CommonHelper.addParameter(isH5 ? callbackH5Url : callbackUrl, "token", tokenString);
-        logger.debug("redirectionUrl: {}", redirectionUrl);
+        final String redirectionUrlLast = CommonHelper.addParameter(redirectionUrl, "token", tokenString);
+        logger.debug("redirectionUrl: {}", redirectionUrlLast);
         
-        Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrl);
+        Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrlLast);
         
+        //return Optional.of(RedirectionActionHelper.buildRedirectUrlAction(context, redirectionUrl));
         return Optional.empty();
     }
 
@@ -131,28 +118,13 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
 	public void setCallbackUrl(String callbackUrl) {
 		this.callbackUrl = callbackUrl;
 	}
-	
-	public String getCallbackH5Url() {
-		return callbackH5Url;
+	 
+	public Pac4jRedirectionUrlParser getRedirectionUrlParser() {
+		return redirectionUrlParser;
 	}
 
-	public void setCallbackH5Url(String callbackH5Url) {
-		this.callbackH5Url = callbackH5Url;
-		this.setH5RequestMatcher(callbackH5Url);
-	}
-
-	/**
-	 * Sets the URL that determines if authentication is required
-	 *
-	 * @param filterProcessesUrl
-	 */
-	public void setH5RequestMatcher(String filterProcessesUrl) {
-		setH5RequestMatcher(new AntPathRequestMatcher(filterProcessesUrl));
-	}
-	
-	public final void setH5RequestMatcher(RequestMatcher requestMatcher) {
-		Assert.notNull(requestMatcher, "requestMatcher cannot be null");
-		this.h5RequestMatcher = requestMatcher;
+	public void setRedirectionUrlParser(Pac4jRedirectionUrlParser redirectionUrlParser) {
+		this.redirectionUrlParser = redirectionUrlParser;
 	}
 
 	public JwtPayloadRepository getJwtPayloadRepository() {

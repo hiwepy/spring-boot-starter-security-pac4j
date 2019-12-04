@@ -46,18 +46,6 @@ public class SecurityPac4jAuthcProperties extends SecurityAuthcProperties {
 	private String authzProxyUrl;
 
 	/**
-	 * The location of the front-end server login URL, i.e.
-	 * http://localhost:8080/#/client?target=/portal
-	 * http://localhost:8080/#/client?client_name=cas&target=/portal
-	 */
-	private String authzProxyH5Url;
-
-	/**
-	 * H5 Redirect Pattern
-	 */
-	private String authzProxyH5UrlPattern = "/**/h5*";
-
-	/**
 	 * Define on which error URL the user will be redirected in case of an exception.
 	 */
 	private String errorUrl;
