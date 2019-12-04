@@ -1,6 +1,9 @@
 package org.springframework.security.boot;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -17,5 +20,7 @@ public class SecurityPac4jProperties {
     
 	/** Whether Enable Pac4j Authentication. */
 	private boolean enabled = false;
+
+	private List<Pac4jRedirectionProperties> redirects;
 	
 }

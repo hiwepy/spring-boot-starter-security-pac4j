@@ -38,5 +38,10 @@ public class Pac4jRedirectionProperties {
 	private String pathPattern = "/login/pac4j";
 
 	private String redirectUrl; 
+
+	/**
+	 * Define on which error URL the user will be redirected in case of an exception.
+	 */
+	private String errorUrl;
 	
 }

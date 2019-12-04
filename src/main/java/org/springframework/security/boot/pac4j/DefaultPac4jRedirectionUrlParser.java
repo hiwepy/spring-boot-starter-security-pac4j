@@ -39,7 +39,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 	}
 	
 	@Override
-	public Optional<String> parser(WebContext context, Authentication authentication) {
+	public Optional<String> parser(WebContext context) {
 		if(CollectionUtils.isEmpty(redirects)) {
 			return Optional.empty();
 		}
@@ -59,6 +59,11 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 			}
 		}
 		return Optional.empty();
+	}
+	
+	@Override
+	public Optional<String> parser(WebContext context, Authentication authentication) {
+		return this.parser(context);
 	}
 
 }

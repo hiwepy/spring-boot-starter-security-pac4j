@@ -74,7 +74,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    return logoutHandler;
 	}
 	
-
 	@Bean
 	@ConditionalOnMissingBean
 	public Pac4jRedirectionUrlParser redirectionUrlParser(SecurityPac4jAuthcProperties authcProperties) {
@@ -122,7 +121,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    private final Pac4jEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
     	private final Pac4jProxyReceptor pac4jProxyReceptor;
-    	    
+    	private final Pac4jRedirectionUrlParser redirectionUrlParser;
+    	
 		public Pac4jWebSecurityConfigurationAdapter(
 				
 				SecurityBizProperties bizProperties,
@@ -136,7 +136,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<Pac4jProxyReceptor> pac4jProxyReceptorProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<LogoutHandler> logoutHandlerProvider,
-				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider
+				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider,
+				ObjectProvider<Pac4jRedirectionUrlParser> redirectionUrlParserProvider
 				
 			) {
 			
@@ -151,6 +152,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
 			this.pac4jProxyReceptor = pac4jProxyReceptorProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
+			this.redirectionUrlParser = redirectionUrlParserProvider.getIfAvailable();
 			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
    			this.requestCache = super.requestCache();
    			
@@ -200,7 +202,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
-	        
+	        callbackFilter.setRedirectionUrlParser(redirectionUrlParser);
 	        // 前后端分离模式
 	        if(authcProperties.isAuthzProxy()) {
 	        	callbackFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );

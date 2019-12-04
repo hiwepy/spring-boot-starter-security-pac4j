@@ -27,6 +27,12 @@ import org.springframework.security.core.Authentication;
 
 public interface Pac4jRedirectionUrlParser {
 
-	 public Optional<String> parser(final WebContext context, Authentication authentication);
+	 public default Optional<String> parser(final WebContext context){
+		 return Optional.empty();
+	 };
+	 
+	 public default Optional<String> parser(final WebContext context, Authentication authentication){
+		 return Optional.empty();
+	 };
 	 
 }

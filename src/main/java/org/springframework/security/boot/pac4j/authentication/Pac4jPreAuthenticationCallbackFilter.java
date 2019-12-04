@@ -16,6 +16,7 @@
 package org.springframework.security.boot.pac4j.authentication;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -32,6 +33,7 @@ import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -61,6 +63,8 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
 
     private String suffix;
 
+    private Pac4jRedirectionUrlParser redirectionUrlParser; 
+    
 	private RequestMatcher requiresAuthenticationRequestMatcher;
 
     public Pac4jPreAuthenticationCallbackFilter() {
@@ -110,12 +114,23 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
     	
     	final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
     	
+    	String redirectionUrl = null;
+        if( null != getRedirectionUrlParser()) {
+     	    Optional<String> customRedirectionUrl = getRedirectionUrlParser().parser(context);
+     	    if(null != customRedirectionUrl && customRedirectionUrl.isPresent()) {
+     	    	redirectionUrl = customRedirectionUrl.get();
+     	    }
+     	}
+        if( null == redirectionUrl) {
+        	redirectionUrl = this.defaultUrl;
+        }
+        
         if (mustApply(context)) {
         	
         	CommonHelper.assertNotNull("callbackLogic", this.callbackLogic);
         	
 			callbackLogic.perform(context, this.config, JEEHttpActionAdapter.INSTANCE,
-					this.defaultUrl, this.saveInSession, this.multiProfile, this.renewSession, this.defaultClient);
+					redirectionUrl, this.saveInSession, this.multiProfile, this.renewSession, this.defaultClient);
 			
         } else {
         	
@@ -241,5 +256,13 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
    		Assert.notNull(requestMatcher, "requestMatcher cannot be null");
    		this.requiresAuthenticationRequestMatcher = requestMatcher;
    	}
+   	
+   	public Pac4jRedirectionUrlParser getRedirectionUrlParser() {
+		return redirectionUrlParser;
+	}
+
+	public void setRedirectionUrlParser(Pac4jRedirectionUrlParser redirectionUrlParser) {
+		this.redirectionUrlParser = redirectionUrlParser;
+	}
 
 }

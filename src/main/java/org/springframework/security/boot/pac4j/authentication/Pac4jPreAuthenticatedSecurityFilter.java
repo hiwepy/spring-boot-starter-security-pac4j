@@ -17,6 +17,7 @@ package org.springframework.security.boot.pac4j.authentication;
 
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -34,6 +35,7 @@ import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.boot.utils.ProfileUtils;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -64,6 +66,8 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 	
 	private Pac4jAuthorizationTokenGenerator tokenGenerator;
 
+    private Pac4jRedirectionUrlParser redirectionUrlParser;
+    
 	/**
 	 * Define on which error URL the user will be redirected in case of an exception.
 	 */
@@ -112,7 +116,19 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
         final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
 
         if(securityLogic instanceof DefaultSecurityLogic && StringUtils.hasText(errorUrl)) {
-        	((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setErrorUrl(errorUrl);
+        	
+        	String redirectionUrl = null;
+            if( null != getRedirectionUrlParser()) {
+         	    Optional<String> customRedirectionUrl = getRedirectionUrlParser().parser(context);
+         	    if(null != customRedirectionUrl && customRedirectionUrl.isPresent()) {
+         	    	redirectionUrl = customRedirectionUrl.get();
+         	    }
+         	}
+            if( null == redirectionUrl) {
+            	redirectionUrl = this.errorUrl;
+            }
+            
+        	((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setErrorUrl(redirectionUrl);
         }
 
 		securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
@@ -245,6 +261,14 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 			RequestMatcher requestMatcher) {
 		Assert.notNull(requestMatcher, "requestMatcher cannot be null");
 		this.requiresAuthenticationRequestMatcher = requestMatcher;
+	}
+	
+   	public Pac4jRedirectionUrlParser getRedirectionUrlParser() {
+		return redirectionUrlParser;
+	}
+
+	public void setRedirectionUrlParser(Pac4jRedirectionUrlParser redirectionUrlParser) {
+		this.redirectionUrlParser = redirectionUrlParser;
 	}
 
 }
