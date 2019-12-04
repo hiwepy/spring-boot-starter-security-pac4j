@@ -37,6 +37,6 @@ public class Pac4jRedirectionProperties {
 	/** Path Pattern */
 	private String pathPattern = "/login/pac4j";
 
-	private String redirectionUrl; 
+	private String redirectUrl; 
 	
 }

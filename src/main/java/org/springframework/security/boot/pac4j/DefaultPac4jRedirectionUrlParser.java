@@ -45,7 +45,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 		}
 		for (Pac4jRedirectionProperties properties : redirects) {
 			if(matcher.match(properties.getPathPattern(), context.getPath()) || matcher.match(properties.getPathPattern(), context.getFullRequestURL())) {
-				return Optional.of(properties.getRedirectionUrl());
+				return Optional.of(properties.getRedirectUrl());
 			}
 			Map<String, String> headerPattern = properties.getHeaderPattern();
 			if(!CollectionUtils.isEmpty(headerPattern)) {
@@ -53,7 +53,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 				for (String header : headerPattern.keySet()) {
 					Optional<String> headerOptional =  context.getRequestHeader(header);
 					if(headerOptional.isPresent() && matcher.match(headerOptional.get(), headerPattern.get(header))) {
-						return Optional.of(properties.getRedirectionUrl());
+						return Optional.of(properties.getRedirectUrl());
 					}
 				}
 			}
