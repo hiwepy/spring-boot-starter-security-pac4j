@@ -15,8 +15,11 @@
  */
 package org.springframework.security.boot;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.boot.biz.property.SecurityAuthcProperties;
+import org.springframework.security.boot.pac4j.Pac4jRedirectionProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +48,8 @@ public class SecurityPac4jAuthcProperties extends SecurityAuthcProperties {
 	 */
 	private String authzProxyUrl;
 
+	private List<Pac4jRedirectionProperties> redirects;
+	
 	/**
 	 * Define on which error URL the user will be redirected in case of an exception.
 	 */

@@ -15,10 +15,14 @@
  */
 package org.springframework.security.boot.pac4j;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.pac4j.core.context.WebContext;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.CollectionUtils;
 
 /**
  * TODO
@@ -27,8 +31,33 @@ import org.springframework.security.core.Authentication;
 
 public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlParser {
 
+	private AntPathMatcher matcher = new AntPathMatcher();
+	private List<Pac4jRedirectionProperties> redirects;
+	
+	public DefaultPac4jRedirectionUrlParser(List<Pac4jRedirectionProperties> redirects) {
+		this.redirects = redirects;
+	}
+	
 	@Override
 	public Optional<String> parser(WebContext context, Authentication authentication) {
+		if(CollectionUtils.isEmpty(redirects)) {
+			return Optional.empty();
+		}
+		for (Pac4jRedirectionProperties properties : redirects) {
+			if(matcher.match(properties.getPathPattern(), context.getPath()) || matcher.match(properties.getPathPattern(), context.getFullRequestURL())) {
+				return Optional.of(properties.getRedirectionUrl());
+			}
+			Map<String, String> headerPattern = properties.getHeaderPattern();
+			if(!CollectionUtils.isEmpty(headerPattern)) {
+				// String
+				for (String header : headerPattern.keySet()) {
+					Optional<String> headerOptional =  context.getRequestHeader(header);
+					if(headerOptional.isPresent() && matcher.match(headerOptional.get(), headerPattern.get(header))) {
+						return Optional.of(properties.getRedirectionUrl());
+					}
+				}
+			}
+		}
 		return Optional.empty();
 	}
 

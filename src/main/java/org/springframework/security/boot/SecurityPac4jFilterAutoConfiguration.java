@@ -77,8 +77,8 @@ public class SecurityPac4jFilterAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Pac4jRedirectionUrlParser redirectionUrlParser() {
-		return new DefaultPac4jRedirectionUrlParser();
+	public Pac4jRedirectionUrlParser redirectionUrlParser(SecurityPac4jAuthcProperties authcProperties) {
+		return new DefaultPac4jRedirectionUrlParser(authcProperties.getRedirects());
 	}
 	
 	@Bean
