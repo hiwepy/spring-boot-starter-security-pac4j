@@ -60,6 +60,6 @@ public class SecurityPac4jAuthcProperties  extends SecurityAuthcProperties{
 	/**
 	 * H5 Redirect List
 	 */
-	private List<String> h5RedirectList = new ArrayList<String>();
+	private List<String> authzProxyH5List = new ArrayList<String>();
 	
 }

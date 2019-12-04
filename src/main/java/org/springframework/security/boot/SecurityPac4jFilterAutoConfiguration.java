@@ -79,7 +79,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
 		redirectionActionBuilder.setCallbackUrl(authcProperties.getAuthzProxyUrl());
 		redirectionActionBuilder.setCallbackH5Url(authcProperties.getAuthzProxyH5Url());
-		redirectionActionBuilder.setH5RedirectList(authcProperties.getH5RedirectList());
+		redirectionActionBuilder.setH5RedirectList(authcProperties.getAuthzProxyH5List());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
 		redirectionActionBuilder.setUserDetailsService(userDetailsService);
 		
