@@ -168,6 +168,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			securityFilter.setClients(pac4jProperties.getClients());
 			// Security configuration
 			securityFilter.setConfig(pac4jConfig);
+			securityFilter.setErrorUrl(authcProperties.getErrorUrl());
 			securityFilter.setMatchers(pac4jProperties.getMatchers());
 			// Whether multiple profiles should be kept
 			securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
