@@ -25,7 +25,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
 import org.springframework.security.boot.biz.userdetails.UserDetailsServiceAdapter;
+import org.springframework.security.boot.pac4j.DefaultPac4jCallbackUrlParser;
 import org.springframework.security.boot.pac4j.DefaultPac4jRedirectionUrlParser;
+import org.springframework.security.boot.pac4j.Pac4jCallbackUrlParser;
 import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
 import org.springframework.security.boot.pac4j.Pac4jRedirectionActionBuilder;
 import org.springframework.security.boot.pac4j.Pac4jRedirectionUrlParser;
@@ -81,6 +83,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 	}
 	
 	@Bean
+	@ConditionalOnMissingBean
+	public Pac4jCallbackUrlParser callbackUrlParser(SecurityPac4jCallbackProperties callbackProperties) {
+		return new DefaultPac4jCallbackUrlParser(callbackProperties.getRedirects());
+	}
+	
+	@Bean
 	public Pac4jProxyReceptor pac4jProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
 			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, 
 			Pac4jRedirectionUrlParser redirectionUrlParser,
@@ -121,6 +129,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    private final Pac4jEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
     	private final Pac4jProxyReceptor pac4jProxyReceptor;
+    	private final Pac4jCallbackUrlParser callbackUrlParser;
     	private final Pac4jRedirectionUrlParser redirectionUrlParser;
     	
 		public Pac4jWebSecurityConfigurationAdapter(
@@ -137,6 +146,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<LogoutHandler> logoutHandlerProvider,
 				ObjectProvider<Pac4jEntryPoint> authenticationEntryPointProvider,
+				ObjectProvider<Pac4jCallbackUrlParser> callbackUrlParserProvider,
 				ObjectProvider<Pac4jRedirectionUrlParser> redirectionUrlParserProvider
 				
 			) {
@@ -152,6 +162,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
 			this.pac4jProxyReceptor = pac4jProxyReceptorProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
+			this.callbackUrlParser = callbackUrlParserProvider.getIfAvailable();
 			this.redirectionUrlParser = redirectionUrlParserProvider.getIfAvailable();
 			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
    			this.requestCache = super.requestCache();
@@ -184,6 +195,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			securityFilter.setMatchers(pac4jProperties.getMatchers());
 			// Whether multiple profiles should be kept
 			securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
+			securityFilter.setRedirectionUrlParser(redirectionUrlParser);
 			
 		    return securityFilter;
 		}
@@ -202,7 +214,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
-	        callbackFilter.setRedirectionUrlParser(redirectionUrlParser);
+	        callbackFilter.setCallbackUrlParser(callbackUrlParser);
 	        // 前后端分离模式
 	        if(authcProperties.isAuthzProxy()) {
 	        	callbackFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );

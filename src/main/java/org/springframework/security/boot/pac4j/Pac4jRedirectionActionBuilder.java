@@ -92,7 +92,7 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     	
     	String redirectionUrl = null;
         if( null != redirectionUrlParser) {
-     	    Optional<String> customRedirectionUrl = redirectionUrlParser.parser(jeeContext, authentication);
+     	    Optional<String> customRedirectionUrl = redirectionUrlParser.redirectUrl(jeeContext, authentication);
      	    if(null != customRedirectionUrl && customRedirectionUrl.isPresent()) {
      	    	redirectionUrl = customRedirectionUrl.get();
      	    }

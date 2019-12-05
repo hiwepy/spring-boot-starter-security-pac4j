@@ -15,24 +15,31 @@
  */
 package org.springframework.security.boot.pac4j;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.pac4j.core.context.WebContext;
-import org.springframework.security.core.Authentication;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * TODO
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
+@Getter
+@Setter
+@ToString
+public class Pac4jCallbackProperties {
 
-public interface Pac4jRedirectionUrlParser {
+	/** Header Pattern */
+	private Map<String, String> headerPattern = new HashMap<String, String>();
+	
+	/** Parameter Pattern */
+	private Map<String, String> paramPattern = new HashMap<String, String>();
+	
+	/** Path Pattern */
+	private String pathPattern;
 
-	 public default Optional<String> errorUrl(final WebContext context){
-		 return Optional.empty();
-	 };
-	 
-	 public default Optional<String> redirectUrl(final WebContext context, Authentication authentication){
-		 return Optional.empty();
-	 };
-	 
+	private String callbackUrl; 
+	
 }

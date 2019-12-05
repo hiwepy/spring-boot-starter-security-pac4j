@@ -29,30 +29,30 @@ import org.springframework.util.CollectionUtils;
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
 
-public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlParser {
+public class DefaultPac4jCallbackUrlParser implements Pac4jCallbackUrlParser {
 
 	private AntPathMatcher matcher = new AntPathMatcher();
-	private List<Pac4jRedirectionProperties> redirects;
+	private List<Pac4jCallbackProperties> redirects;
 	
-	public DefaultPac4jRedirectionUrlParser(List<Pac4jRedirectionProperties> redirects) {
+	public DefaultPac4jCallbackUrlParser(List<Pac4jCallbackProperties> redirects) {
 		this.redirects = redirects;
 	}
 	
 	@Override
-	public Optional<String> errorUrl(WebContext context) {
+	public Optional<String> parser(WebContext context) {
 		if(CollectionUtils.isEmpty(redirects)) {
 			return Optional.empty();
 		}
-		for (Pac4jRedirectionProperties properties : redirects) {
+		for (Pac4jCallbackProperties properties : redirects) {
 			if(matcher.match(properties.getPathPattern(), context.getPath()) || matcher.match(properties.getPathPattern(), context.getFullRequestURL())) {
-				return Optional.of(properties.getRedirectUrl());
+				return Optional.of(properties.getCallbackUrl());
 			}
 			Map<String, String> headerPattern = properties.getHeaderPattern();
 			if(!CollectionUtils.isEmpty(headerPattern)) {
 				for (String header : headerPattern.keySet()) {
 					Optional<String> headerOptional =  context.getRequestHeader(header);
 					if(headerOptional.isPresent() && matcher.match(headerOptional.get(), headerPattern.get(header))) {
-						return Optional.of(properties.getRedirectUrl());
+						return Optional.of(properties.getCallbackUrl());
 					}
 				}
 			}
@@ -61,7 +61,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 				for (String param : paramPattern.keySet()) {
 					Optional<String> paramOptional =  context.getRequestParameter(param);
 					if(paramOptional.isPresent() && matcher.match(paramOptional.get(), headerPattern.get(param))) {
-						return Optional.of(properties.getErrorUrl());
+						return Optional.of(properties.getCallbackUrl());
 					}
 				}
 			}
@@ -70,34 +70,8 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 	}
 	
 	@Override
-	public Optional<String> redirectUrl(WebContext context, Authentication authentication) {
-		if(CollectionUtils.isEmpty(redirects)) {
-			return Optional.empty();
-		}
-		for (Pac4jRedirectionProperties properties : redirects) {
-			if(matcher.match(properties.getPathPattern(), context.getPath()) || matcher.match(properties.getPathPattern(), context.getFullRequestURL())) {
-				return Optional.of(properties.getRedirectUrl());
-			}
-			Map<String, String> headerPattern = properties.getHeaderPattern();
-			if(!CollectionUtils.isEmpty(headerPattern)) {
-				for (String header : headerPattern.keySet()) {
-					Optional<String> headerOptional =  context.getRequestHeader(header);
-					if(headerOptional.isPresent() && matcher.match(headerOptional.get(), headerPattern.get(header))) {
-						return Optional.of(properties.getRedirectUrl());
-					}
-				}
-			}
-			Map<String, String> paramPattern = properties.getParamPattern();
-			if(!CollectionUtils.isEmpty(paramPattern)) {
-				for (String param : paramPattern.keySet()) {
-					Optional<String> paramOptional =  context.getRequestParameter(param);
-					if(paramOptional.isPresent() && matcher.match(paramOptional.get(), headerPattern.get(param))) {
-						return Optional.of(properties.getRedirectUrl());
-					}
-				}
-			}
-		}
-		return Optional.empty();
+	public Optional<String> parser(WebContext context, Authentication authentication) {
+		return this.parser(context);
 	}
 
 }

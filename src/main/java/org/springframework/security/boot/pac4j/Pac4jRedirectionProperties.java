@@ -34,8 +34,11 @@ public class Pac4jRedirectionProperties {
 	/** Header Pattern */
 	private Map<String, String> headerPattern = new HashMap<String, String>();
 	
+	/** Parameter Pattern */
+	private Map<String, String> paramPattern = new HashMap<String, String>();
+	
 	/** Path Pattern */
-	private String pathPattern = "/login/pac4j";
+	private String pathPattern;
 
 	private String redirectUrl; 
 

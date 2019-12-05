@@ -25,13 +25,13 @@ import org.springframework.security.core.Authentication;
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
 
-public interface Pac4jRedirectionUrlParser {
+public interface Pac4jCallbackUrlParser {
 
-	 public default Optional<String> errorUrl(final WebContext context){
+	 public default Optional<String> parser(final WebContext context){
 		 return Optional.empty();
 	 };
 	 
-	 public default Optional<String> redirectUrl(final WebContext context, Authentication authentication){
+	 public default Optional<String> parser(final WebContext context, Authentication authentication){
 		 return Optional.empty();
 	 };
 	 

@@ -15,7 +15,10 @@
  */
 package org.springframework.security.boot;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.boot.pac4j.Pac4jCallbackProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +35,8 @@ public class SecurityPac4jCallbackProperties {
 	/** Callback Path Pattern */
 	private String pathPattern = "/login/callback";
 
+	private List<Pac4jCallbackProperties> redirects;
+	
     private String defaultUrl;
     
 }

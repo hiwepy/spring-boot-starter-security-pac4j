@@ -117,18 +117,18 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 
         if(securityLogic instanceof DefaultSecurityLogic && StringUtils.hasText(errorUrl)) {
         	
-        	String redirectionUrl = null;
+        	String errorUrl = null;
             if( null != getRedirectionUrlParser()) {
-         	    Optional<String> customRedirectionUrl = getRedirectionUrlParser().parser(context);
-         	    if(null != customRedirectionUrl && customRedirectionUrl.isPresent()) {
-         	    	redirectionUrl = customRedirectionUrl.get();
+         	    Optional<String> customErrorUrl = getRedirectionUrlParser().errorUrl(context);
+         	    if(null != customErrorUrl && customErrorUrl.isPresent()) {
+         	    	errorUrl = customErrorUrl.get();
          	    }
          	}
-            if( null == redirectionUrl) {
-            	redirectionUrl = this.errorUrl;
+            if( null == errorUrl) {
+            	errorUrl = this.errorUrl;
             }
             
-        	((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setErrorUrl(redirectionUrl);
+        	((DefaultSecurityLogic<Object, JEEContext>) securityLogic).setErrorUrl(errorUrl);
         }
 
 		securityLogic.perform(context, this.config, (ctx, profiles, parameters) -> {
