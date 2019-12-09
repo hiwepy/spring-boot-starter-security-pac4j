@@ -50,6 +50,9 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 			return Optional.empty();
 		}
 		for (Pac4jRedirectionProperties properties : redirects) {
+			if(!StringUtils.hasText(properties.getErrorUrl())) {
+				continue;
+			}
 			if (StringUtils.hasText(properties.getPathPattern())) {
 				logger.debug("请求路径匹配规则：{}", properties.getPathPattern());
 				if(matcher.match(properties.getPathPattern(), context.getPath())) {
@@ -93,6 +96,11 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 			return Optional.empty();
 		}
 		for (Pac4jRedirectionProperties properties : redirects) {
+
+			if(!StringUtils.hasText(properties.getRedirectUrl())) {
+				continue;
+			}
+			
 			if (StringUtils.hasText(properties.getPathPattern())) {
 				logger.debug("请求路径匹配规则：{}", properties.getPathPattern());
 				if(matcher.match(properties.getPathPattern(), context.getPath())) {

@@ -51,6 +51,10 @@ public class DefaultPac4jCallbackUrlParser implements Pac4jCallbackUrlParser {
 		}
 		for (Pac4jCallbackProperties properties : redirects) {
 			
+			if(!StringUtils.hasText(properties.getCallbackUrl())) {
+				continue;
+			}
+			
 			if (StringUtils.hasText(properties.getPathPattern())) {
 				logger.debug("请求路径匹配规则：{}", properties.getPathPattern());
 				if(matcher.match(properties.getPathPattern(), context.getPath())) {
