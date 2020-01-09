@@ -59,7 +59,7 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     }
     
     @Override
-    public Optional<RedirectionAction> redirect(final WebContext context) {
+    public Optional<RedirectionAction> getRedirectionAction(final WebContext context) {
     	
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
     	CommonHelper.assertNotNull("userDetailsService", userDetailsService);

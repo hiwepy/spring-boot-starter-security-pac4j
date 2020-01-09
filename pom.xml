@@ -375,7 +375,7 @@
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <maven-surefire-plugin.vertsion>2.22.1</maven-surefire-plugin.vertsion>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-		<pac4j.version>4.0.0-RC1</pac4j.version>
+		<pac4j.version>4.0.0-RC2</pac4j.version>
 		<spring-security-biz.version>1.0.0-SNAPSHOT</spring-security-biz.version>
 		<spring-boot-starter-pac4j.version>1.0.0-SNAPSHOT</spring-boot-starter-pac4j.version>
 	</properties>

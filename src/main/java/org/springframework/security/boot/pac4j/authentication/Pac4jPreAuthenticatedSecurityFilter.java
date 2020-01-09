@@ -135,7 +135,7 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 			// 前后端分离模式下的前端跳转代理：解决认证成功后携带认证信息到前端服务问题
 			if (proxyReceptor != null) {
 				logger.debug("proxyReceptor : {}", proxyReceptor.getClass());
-				return proxyReceptor.redirect(ctx);
+				return proxyReceptor.getRedirectionAction(ctx);
 			} 
 			
 			else {
