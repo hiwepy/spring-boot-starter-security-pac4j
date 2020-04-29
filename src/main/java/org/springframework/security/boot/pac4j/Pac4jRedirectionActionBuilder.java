@@ -211,6 +211,14 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
 		return targetUrlParameter;
 	}
 	
+	public boolean isUseReferer() {
+		return useReferer;
+	}
+
+	public void setUseReferer(boolean useReferer) {
+		this.useReferer = useReferer;
+	}
+
 	public String getCallbackUrl() {
 		return callbackUrl;
 	}
