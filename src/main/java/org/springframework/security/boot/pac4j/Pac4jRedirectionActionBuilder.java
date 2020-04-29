@@ -17,6 +17,7 @@ package org.springframework.security.boot.pac4j;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.http.RedirectionAction;
@@ -34,6 +35,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
+import org.springframework.security.web.util.UrlUtils;
+import org.springframework.util.Assert;
 
 /**
  * TODO
@@ -46,10 +49,15 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     /**
   	 * The location of the front-end server login URL, 
   	 * i.e. 
-  	 * http://localhost:8080/#/client?target=/portal
-  	 * http://localhost:8080/#/client?client_name=cas&target=/portal
+  	 * http://localhost:8080/#/client
+  	 * http://localhost:8080/#/client?client_name=cas
   	 */
     private String callbackUrl;
+    private String targetUrlParameter = null;
+	private String defaultTargetUrl = "/";
+	private boolean alwaysUseDefaultTargetUrl = false;
+	private boolean useReferer = false;
+	
     private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
@@ -57,7 +65,9 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     
     public Pac4jRedirectionActionBuilder() {
     }
-    
+     
+
+	
     @Override
     public Optional<RedirectionAction> getRedirectionAction(final WebContext context) {
     	
@@ -100,17 +110,107 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
         if( null == redirectionUrl) {
         	redirectionUrl = callbackUrl;
         }
-    	
-    	// 重定向
-        final String redirectionUrlLast = CommonHelper.addParameter(redirectionUrl, "token", tokenString);
-        logger.debug("redirectionUrl: {}", redirectionUrlLast);
         
-        Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrlLast);
+        // 重定向后的跳转地址
+        redirectionUrl = CommonHelper.addParameter(redirectionUrl, "target", this.determineTargetUrl(jeeContext));
+        redirectionUrl = CommonHelper.addParameter(redirectionUrl, "token", tokenString);
+        logger.debug("redirectionUrl: {}", redirectionUrl);
+        
+        Pac4jUrlUtils.sendRedirect(jeeContext.getNativeResponse(), redirectionUrl);
         
         //return Optional.of(RedirectionActionHelper.buildRedirectUrlAction(context, redirectionUrl));
         return Optional.empty();
     }
 
+	/**
+	 * Builds the target URL according to the logic defined in the main class Javadoc.
+	 */
+	protected String determineTargetUrl(WebContext context) {
+		if (isAlwaysUseDefaultTargetUrl()) {
+			return defaultTargetUrl;
+		}
+
+		// Check for the parameter and use that if available
+		String targetUrl = null;
+
+		if (targetUrlParameter != null) {
+			targetUrl = context.getRequestParameter(targetUrlParameter).orElse("");
+			if (StringUtils.isNotBlank(targetUrl)) {
+				logger.debug("Found targetUrlParameter in request: " + targetUrl);
+				return targetUrl;
+			}
+		}
+
+		if (useReferer && !StringUtils.isNotBlank(targetUrl)) {
+			targetUrl = context.getRequestHeader("Referer").orElse("");
+			logger.debug("Using Referer header: " + targetUrl);
+		}
+
+		if (!StringUtils.isNotBlank(targetUrl)) {
+			targetUrl = defaultTargetUrl;
+			logger.debug("Using default Url: " + targetUrl);
+		}
+
+		return targetUrl;
+	}
+
+	/**
+	 * Supplies the default target Url that will be used if no saved request is found or
+	 * the {@code alwaysUseDefaultTargetUrl} property is set to true. If not set, defaults
+	 * to {@code /}.
+	 *
+	 * @return the defaultTargetUrl property
+	 */
+	protected final String getDefaultTargetUrl() {
+		return defaultTargetUrl;
+	}
+
+	/**
+	 * Supplies the default target Url that will be used if no saved request is found in
+	 * the session, or the {@code alwaysUseDefaultTargetUrl} property is set to true. If
+	 * not set, defaults to {@code /}. It will be treated as relative to the web-app's
+	 * context path, and should include the leading <code>/</code>. Alternatively,
+	 * inclusion of a scheme name (such as "http://" or "https://") as the prefix will
+	 * denote a fully-qualified URL and this is also supported.
+	 *
+	 * @param defaultTargetUrl
+	 */
+	public void setDefaultTargetUrl(String defaultTargetUrl) {
+		Assert.isTrue(UrlUtils.isValidRedirectUrl(defaultTargetUrl),
+				"defaultTarget must start with '/' or with 'http(s)'");
+		this.defaultTargetUrl = defaultTargetUrl;
+	}
+
+	/**
+	 * If <code>true</code>, will always redirect to the value of {@code defaultTargetUrl}
+	 * (defaults to <code>false</code>).
+	 */
+	public void setAlwaysUseDefaultTargetUrl(boolean alwaysUseDefaultTargetUrl) {
+		this.alwaysUseDefaultTargetUrl = alwaysUseDefaultTargetUrl;
+	}
+
+	protected boolean isAlwaysUseDefaultTargetUrl() {
+		return alwaysUseDefaultTargetUrl;
+	}
+
+	/**
+	 * If this property is set, the current request will be checked for this a parameter
+	 * with this name and the value used as the target URL if present.
+	 *
+	 * @param targetUrlParameter the name of the parameter containing the encoded target
+	 * URL. Defaults to null.
+	 */
+	public void setTargetUrlParameter(String targetUrlParameter) {
+		if (targetUrlParameter != null) {
+			Assert.hasText(targetUrlParameter, "targetUrlParameter cannot be empty");
+		}
+		this.targetUrlParameter = targetUrlParameter;
+	}
+
+	protected String getTargetUrlParameter() {
+		return targetUrlParameter;
+	}
+	
 	public String getCallbackUrl() {
 		return callbackUrl;
 	}
