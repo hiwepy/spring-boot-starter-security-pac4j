@@ -15,6 +15,9 @@
  */
 package org.springframework.security.boot.pac4j;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -144,7 +147,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 		
 		// 获取上下文
     	JEEContext jeeContext = (JEEContext) context;
-
+    	
     	String redirectionUrl = CommonHelper.addParameter(properties.getRedirectUrl(), "target", this.determineTargetUrl(jeeContext, properties));
         
         return Optional.of(redirectionUrl);
@@ -166,6 +169,11 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 			targetUrl = context.getRequestParameter(properties.getTargetUrlParameter()).orElse("");
 			if (StringUtils.hasText(targetUrl)) {
 				logger.debug("Found targetUrlParameter in request: " + targetUrl);
+				try {
+					return URLDecoder.decode(targetUrl, StandardCharsets.UTF_8.name());
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 				return targetUrl;
 			}
 		}
