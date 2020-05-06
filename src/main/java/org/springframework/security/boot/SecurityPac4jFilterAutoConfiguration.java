@@ -95,14 +95,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 			UserDetailsServiceAdapter userDetailsService) {
 		
 		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
-		redirectionActionBuilder.setAlwaysUseDefaultTargetUrl(authcProperties.isAlwaysUseDefaultTargetUrl());
 		redirectionActionBuilder.setCallbackUrl(authcProperties.getAuthzProxyUrl());
-		redirectionActionBuilder.setDefaultTargetUrl(authcProperties.getDefaultTargetUrl());
 		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
 		redirectionActionBuilder.setRedirectionUrlParser(redirectionUrlParser);
-		redirectionActionBuilder.setTargetUrlParameter(authcProperties.getTargetUrlParameter());
 		redirectionActionBuilder.setUserDetailsService(userDetailsService);
-		redirectionActionBuilder.setUseReferer(authcProperties.isUseReferer());
 		
 		Pac4jAjaxRequestResolver ajaxRequestResolver = new Pac4jAjaxRequestResolver();
 		ajaxRequestResolver.setJwtPayloadRepository(jwtPayloadRepository);

@@ -19,7 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -105,11 +107,11 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 				logger.debug("请求路径匹配规则：{}", properties.getPathPattern());
 				if(matcher.match(properties.getPathPattern(), context.getPath())) {
 					logger.debug("成功匹配上下文：{}", context.getPath());
-					return Optional.of(properties.getRedirectUrl());
+					return this.finalRedirectUrl(context, properties);
 				}
 				if(matcher.match(properties.getPathPattern(), context.getFullRequestURL())) {
 					logger.debug("成功匹配全路径：{}", context.getPath());
-					return Optional.of(properties.getRedirectUrl());
+					return this.finalRedirectUrl(context, properties);
 				}
 			}
 			Map<String, String> headerPattern = properties.getHeaderPattern();
@@ -119,7 +121,7 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 					Optional<String> headerOptional =  context.getRequestHeader(header);
 					if(headerOptional.isPresent() && matcher.match(headerOptional.get(), headerPattern.get(header))) {
 						logger.debug("匹配规则 {} 成功匹配请求头：{} = {}", headerPattern.get(header), header, headerOptional.get());
-						return Optional.of(properties.getRedirectUrl());
+						return this.finalRedirectUrl(context, properties);
 					}
 				}
 			}
@@ -130,12 +132,55 @@ public class DefaultPac4jRedirectionUrlParser implements Pac4jRedirectionUrlPars
 					Optional<String> paramOptional =  context.getRequestParameter(param);
 					if(paramOptional.isPresent() && matcher.match(paramOptional.get(), paramPattern.get(param))) {
 						logger.debug("匹配规则 {} 成功匹配请求头：{} = {}", paramPattern.get(param), param, paramOptional.get());
-						return Optional.of(properties.getRedirectUrl());
+						return this.finalRedirectUrl(context, properties);
 					}
 				}
 			}
 		}
 		return Optional.empty();
+	}
+	
+	protected Optional<String> finalRedirectUrl(WebContext context, Pac4jRedirectionProperties properties) {
+		
+		// 获取上下文
+    	JEEContext jeeContext = (JEEContext) context;
+
+    	String redirectionUrl = CommonHelper.addParameter(properties.getRedirectUrl(), "target", this.determineTargetUrl(jeeContext, properties));
+        
+        return Optional.of(redirectionUrl);
+	}
+
+
+	/**
+	 * Builds the target URL according to the logic defined in the main class Javadoc.
+	 */
+	protected String determineTargetUrl(WebContext context, Pac4jRedirectionProperties properties) {
+		if (properties.isAlwaysUseDefaultTargetUrl()) {
+			return properties.getDefaultTargetUrl();
+		}
+
+		// Check for the parameter and use that if available
+		String targetUrl = null;
+
+		if (properties.getTargetUrlParameter() != null) {
+			targetUrl = context.getRequestParameter(properties.getTargetUrlParameter()).orElse("");
+			if (StringUtils.hasText(targetUrl)) {
+				logger.debug("Found targetUrlParameter in request: " + targetUrl);
+				return targetUrl;
+			}
+		}
+
+		if (properties.isUseReferer() && !StringUtils.hasText(targetUrl)) {
+			targetUrl = context.getRequestHeader("Referer").orElse("");
+			logger.debug("Using Referer header: " + targetUrl);
+		}
+
+		if (!StringUtils.hasText(targetUrl)) {
+			targetUrl = properties.getDefaultTargetUrl();
+			logger.debug("Using default Url: " + targetUrl);
+		}
+
+		return targetUrl;
 	}
 
 }

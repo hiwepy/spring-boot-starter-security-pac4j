@@ -47,11 +47,6 @@ public class SecurityPac4jAuthcProperties extends SecurityAuthcProperties {
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
 	private String authzProxyUrl;
-	
-	private String targetUrlParameter = null;
-	private String defaultTargetUrl = "/";
-	private boolean alwaysUseDefaultTargetUrl = false;
-	private boolean useReferer = false;
 
 	private List<Pac4jRedirectionProperties> redirects;
 	
