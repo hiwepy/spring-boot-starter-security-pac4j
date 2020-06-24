@@ -117,7 +117,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
 	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
-	static class Pac4jWebSecurityConfigurationAdapter extends SecurityBizConfigurerAdapter {
+	static class Pac4jWebSecurityConfigurationAdapter extends AbstractSecurityConfigurerAdapter {
 
 		private final Pac4jProperties pac4jProperties;
 		private final Pac4jLogoutProperties pac4jLogoutProperties;
