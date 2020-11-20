@@ -43,6 +43,8 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticatedProcessingFilter {
 
@@ -112,7 +114,11 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		
 		CommonHelper.assertNotNull("securityLogic", this.securityLogic);
 		CommonHelper.assertNotNull("config", this.config);
-
+		
+		// Set RequestContextHolder
+		ServletRequestAttributes requestAttributes = new ServletRequestAttributes(httpRequest, httpResponse);
+		RequestContextHolder.setRequestAttributes(requestAttributes, true);
+				
         final JEEContext context = ProfileUtils.getJEEContext(request, response, config.getSessionStore());
 
         if(securityLogic instanceof DefaultSecurityLogic && StringUtils.hasText(errorUrl)) {
