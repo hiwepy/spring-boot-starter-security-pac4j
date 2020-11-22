@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class UrlDomainUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UrlDomainUtils.class);
-    /**
+    /*
      * 获取主域名，即URL头
      * @param url
      * @return
@@ -53,7 +53,7 @@ public class UrlDomainUtils {
     }
 
     
-    /**
+    /*
      * 获取主域名，即URL头
      * @param url
      * @return
@@ -88,7 +88,7 @@ public class UrlDomainUtils {
         return mapRequest;
     }
     
-    /**
+    /*
      * 获取主域名，即URL头
      * @param url
      * @param key url中的参数key
@@ -126,7 +126,7 @@ public class UrlDomainUtils {
         return mapRequest;
     }
 
-    /**
+    /*
      * 截取URL中的？之后的部分
      * @param strUrl
      * @return

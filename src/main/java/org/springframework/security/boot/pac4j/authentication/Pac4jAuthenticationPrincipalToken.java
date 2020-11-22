@@ -35,9 +35,10 @@ public class Pac4jAuthenticationPrincipalToken extends AbstractAuthenticationTok
 
 	/**
 	 * This constructor can be safely used by any code that wishes to create a
-	 * <code>JwtAuthenticationToken</code>, as the {@link #isAuthenticated()}
+	 * <code>Pac4jAuthenticationPrincipalToken</code>, as the {@link #isAuthenticated()}
 	 * will return <code>false</code>.
-	 *
+	 * @param principal the principal
+	 * @param credentials the credentials
 	 */
 	public Pac4jAuthenticationPrincipalToken(Object principal, Object credentials) {
 		super(null);
@@ -52,9 +53,9 @@ public class Pac4jAuthenticationPrincipalToken extends AbstractAuthenticationTok
 	 * producing a trusted (i.e. {@link #isAuthenticated()} = <code>true</code>)
 	 * authentication token.
 	 *
-	 * @param principal
-	 * @param credentials
-	 * @param authorities
+	 * @param principal the principal
+	 * @param credentials the credentials
+	 * @param authorities the authorities
 	 */
 	public Pac4jAuthenticationPrincipalToken(Object principal, Object credentials,
 			Collection<? extends GrantedAuthority> authorities) {

@@ -235,7 +235,7 @@ public class Pac4jPreAuthenticatedSecurityFilter extends AbstractPreAuthenticate
 		this.errorUrl = errorUrl;
 	}
 
-	/**
+	/*
 	 * Indicates whether this filter should attempt to process a login request for the
 	 * current invocation.
 	 * <p>

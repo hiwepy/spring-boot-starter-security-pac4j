@@ -223,7 +223,7 @@ public class Pac4jPreAuthenticationCallbackFilter extends AbstractPreAuthenticat
         this.defaultClient = defaultClient;
     }
     
-    /**
+    /*
    	 * Indicates whether this filter should attempt to process a login request for the
    	 * current invocation.
    	 * <p>

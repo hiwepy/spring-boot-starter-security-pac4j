@@ -51,9 +51,6 @@ import org.springframework.security.web.savedrequest.RequestCache;
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, ServerProperties.class })
 public class SecurityPac4jFilterAutoConfiguration {
 
-	/**
-	 * 账号注销处理器 ：处理账号注销
-	 */
 	@Bean
 	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, Pac4jProperties pac4jProperties,
 			Pac4jLogoutProperties logoutProperties, ServerProperties serverProperties){
@@ -170,7 +167,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 
 		
-		/**
+		/*
 		 * 权限控制过滤器 ：实现权限认证
 		 */
 		public Pac4jPreAuthenticatedSecurityFilter pac4jSecurityFilter() throws Exception {
@@ -200,7 +197,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		    return securityFilter;
 		}
 		
-		/**
+		/*
 		 * 回调过滤器 ：处理登录后的回调访问
 		 */
 		public Pac4jPreAuthenticationCallbackFilter pac4jCallbackFilter() throws Exception {
