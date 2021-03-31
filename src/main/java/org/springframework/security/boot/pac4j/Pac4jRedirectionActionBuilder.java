@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.http.RedirectionAction;
 import org.pac4j.core.redirect.RedirectionActionBuilder;
 import org.pac4j.core.util.CommonHelper;
@@ -59,10 +60,8 @@ public class Pac4jRedirectionActionBuilder implements RedirectionActionBuilder {
     public Pac4jRedirectionActionBuilder() {
     }
      
-
-	
     @Override
-    public Optional<RedirectionAction> getRedirectionAction(final WebContext context) {
+    public Optional<RedirectionAction> getRedirectionAction(WebContext context, SessionStore sessionStore) {
     	
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
     	CommonHelper.assertNotNull("userDetailsService", userDetailsService);

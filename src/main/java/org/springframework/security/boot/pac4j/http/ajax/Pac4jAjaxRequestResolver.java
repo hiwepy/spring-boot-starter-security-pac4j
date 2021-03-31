@@ -16,6 +16,7 @@
 package org.springframework.security.boot.pac4j.http.ajax;
 
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.http.HttpAction;
 import org.pac4j.core.exception.http.OkAction;
 import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
@@ -43,16 +44,10 @@ public class Pac4jAjaxRequestResolver extends DefaultAjaxRequestResolver {
 	private JwtPayloadRepository jwtPayloadRepository;
     private UserDetailsServiceAdapter userDetailsService;
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
-	
-    @Override
-    public boolean isAjax(WebContext context) {
-    	boolean isAjax = super.isAjax(context);
-    	logger.debug("isAjax : {}", isAjax);
-    	return isAjax;
-    }
     
 	@Override
-	public HttpAction buildAjaxResponse(final WebContext context, final RedirectionActionBuilder redirectionActionBuilder) {
+	public HttpAction buildAjaxResponse(final WebContext context, final SessionStore sessionStore,
+            final RedirectionActionBuilder redirectionActionBuilder) {
         
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);
     	CommonHelper.assertNotNull("userDetailsService", userDetailsService);
