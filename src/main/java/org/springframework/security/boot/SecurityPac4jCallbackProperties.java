@@ -39,4 +39,12 @@ public class SecurityPac4jCallbackProperties {
 	
     private String defaultUrl;
     
+
+    private boolean saveInSession;
+
+    private boolean multiProfile;
+
+    private boolean renewSession;
+    
+    
 }

@@ -20,8 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.JEEContextFactory;
-import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.session.JEESessionStore;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultLogoutLogic;
@@ -39,7 +38,7 @@ public class Pac4jLogoutHandler implements LogoutHandler {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private LogoutLogic logoutLogic;
+	private LogoutLogic<Object, JEEContext> logoutLogic;
 
     private Config config;
 
@@ -53,17 +52,13 @@ public class Pac4jLogoutHandler implements LogoutHandler {
 
     private Boolean centralLogout;
 
-	public Pac4jLogoutHandler() {
-		logoutLogic = new DefaultLogoutLogic();
-	}
-
-	public Pac4jLogoutHandler(final Config config) {
-		this();
+	public Pac4jLogoutHandler(final Config config, LogoutLogic<Object, JEEContext> logoutLogic) {
 		this.config = config;
+		this.logoutLogic = logoutLogic;
 	}
 
-	public Pac4jLogoutHandler(final Config config, final String defaultUrl) {
-		this(config);
+	public Pac4jLogoutHandler(final Config config, LogoutLogic<Object, JEEContext> logoutLogic, final String defaultUrl) {
+		this(config, logoutLogic);
 		this.defaultUrl = defaultUrl;
 	}
 
@@ -75,21 +70,22 @@ public class Pac4jLogoutHandler implements LogoutHandler {
 		final Config config = getConfig();
 		CommonHelper.assertNotNull("config", config);
 		
-		final SessionStore bestSessionStore = FindBest.sessionStore(null, config, JEESessionStore.INSTANCE);
-        final HttpActionAdapter bestAdapter = FindBest.httpActionAdapter(null, config, JEEHttpActionAdapter.INSTANCE);
-        final LogoutLogic bestLogic = FindBest.logoutLogic(logoutLogic, config, DefaultLogoutLogic.INSTANCE);
+		final SessionStore<JEEContext> bestSessionStore = FindBest.sessionStore(null, config, JEESessionStore.INSTANCE);
+        final HttpActionAdapter<Object, JEEContext> bestAdapter = FindBest.httpActionAdapter(null, config, JEEHttpActionAdapter.INSTANCE);
+        final LogoutLogic<Object, JEEContext> bestLogic = FindBest.logoutLogic(logoutLogic, config, DefaultLogoutLogic.INSTANCE);
 
-        final WebContext context = FindBest.webContextFactory(null, config, JEEContextFactory.INSTANCE).newContext(request, response);
-        bestLogic.perform(context, bestSessionStore, config, bestAdapter, this.getDefaultUrl(),
+        final JEEContext context = new JEEContext(request, response, bestSessionStore);
+        
+        bestLogic.perform(context, config, bestAdapter, this.getDefaultUrl(),
 				this.getLogoutUrlPattern(), this.isLocalLogout(), this.isDestroySession(), this.isCentralLogout());
 
 	}
 
-	public LogoutLogic getLogoutLogic() {
+	public LogoutLogic<Object, JEEContext> getLogoutLogic() {
 		return logoutLogic;
 	}
 
-	public void setLogoutLogic(LogoutLogic logoutLogic) {
+	public void setLogoutLogic(LogoutLogic<Object, JEEContext> logoutLogic) {
 		this.logoutLogic = logoutLogic;
 	}
 

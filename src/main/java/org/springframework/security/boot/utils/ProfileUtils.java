@@ -23,7 +23,7 @@ import javax.servlet.http.HttpSession;
 
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.profile.UserProfile;
-import org.springframework.security.boot.pac4j.authentication.Pac4jAuthentication;
+import org.pac4j.springframework.security.authentication.Pac4jAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,7 +36,7 @@ import org.springframework.web.util.WebUtils;
  * TODO
  * @author ： <a href="https://github.com/hiwepy">hiwepy</a>
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked"})
 public class ProfileUtils {
 
 	public static SecurityContext getSecurityContext() {

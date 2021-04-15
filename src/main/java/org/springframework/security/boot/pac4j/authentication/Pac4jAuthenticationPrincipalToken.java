@@ -17,19 +17,12 @@ package org.springframework.security.boot.pac4j.authentication;
 
 import java.util.Collection;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.boot.biz.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
 @SuppressWarnings("serial")
 public class Pac4jAuthenticationPrincipalToken extends AbstractAuthenticationToken {
 	
-	
-	// ~ Instance fields
-	// ================================================================================================
-
-	private final Object principal;
-	private Object credentials;
-
 	// ~ Constructors
 	// ===================================================================================================
 
@@ -41,9 +34,7 @@ public class Pac4jAuthenticationPrincipalToken extends AbstractAuthenticationTok
 	 * @param credentials the credentials
 	 */
 	public Pac4jAuthenticationPrincipalToken(Object principal, Object credentials) {
-		super(null);
-		this.principal = principal;
-		this.credentials = credentials;
+		super(principal, credentials, null);
 		setAuthenticated(false);
 	}
 
@@ -59,36 +50,7 @@ public class Pac4jAuthenticationPrincipalToken extends AbstractAuthenticationTok
 	 */
 	public Pac4jAuthenticationPrincipalToken(Object principal, Object credentials,
 			Collection<? extends GrantedAuthority> authorities) {
-		super(authorities);
-		this.principal = principal;
-		this.credentials = credentials;
-		super.setAuthenticated(true); // must use super, as we override
+		super(principal,  credentials, authorities);
 	}
-
-	// ~ Methods
-	// ========================================================================================================
-
-	public Object getCredentials() {
-		return this.credentials;
-	}
-
-	public Object getPrincipal() {
-		return this.principal;
-	}
-
-	public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
-		if (isAuthenticated) {
-			throw new IllegalArgumentException(
-					"Cannot set this token to trusted - use constructor which takes a GrantedAuthority list instead");
-		}
-
-		super.setAuthenticated(false);
-	}
-
-	@Override
-	public void eraseCredentials() {
-		super.eraseCredentials();
-		credentials = null;
-	}
-
+ 
 }

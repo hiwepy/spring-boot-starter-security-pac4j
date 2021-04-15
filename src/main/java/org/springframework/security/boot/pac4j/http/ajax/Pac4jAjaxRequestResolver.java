@@ -16,7 +16,6 @@
 package org.springframework.security.boot.pac4j.http.ajax;
 
 import org.pac4j.core.context.WebContext;
-import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.http.HttpAction;
 import org.pac4j.core.exception.http.OkAction;
 import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
@@ -35,7 +34,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
 
 /**
- * TODO
  * @author 		： <a href="https://github.com/hiwepy">wandl</a>
  */
 public class Pac4jAjaxRequestResolver extends DefaultAjaxRequestResolver {
@@ -46,7 +44,7 @@ public class Pac4jAjaxRequestResolver extends DefaultAjaxRequestResolver {
     private UserDetailsChecker userDetailsChecker = new AccountStatusUserDetailsChecker();
     
 	@Override
-	public HttpAction buildAjaxResponse(final WebContext context, final SessionStore sessionStore,
+	public HttpAction buildAjaxResponse(final WebContext context, 
             final RedirectionActionBuilder redirectionActionBuilder) {
         
     	CommonHelper.assertNotNull("jwtPayloadRepository", jwtPayloadRepository);

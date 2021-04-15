@@ -3,15 +3,16 @@ package org.springframework.security.boot;
 import java.util.stream.Collectors;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.core.ext.http.callback.QueryParameterCallbackUrlExtResolver;
+import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.engine.LogoutLogic;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jLogoutProperties;
 import org.pac4j.spring.boot.Pac4jProperties;
 import org.pac4j.spring.boot.utils.Pac4jUrlUtils;
 import org.pac4j.springframework.security.web.CallbackFilter;
+import org.pac4j.springframework.security.web.LogoutFilter;
 import org.pac4j.springframework.security.web.SecurityFilter;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -25,17 +26,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.boot.biz.userdetails.JwtPayloadRepository;
-import org.springframework.security.boot.biz.userdetails.UserDetailsServiceAdapter;
 import org.springframework.security.boot.pac4j.DefaultPac4jCallbackUrlParser;
 import org.springframework.security.boot.pac4j.DefaultPac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.Pac4jCallbackUrlParser;
-import org.springframework.security.boot.pac4j.Pac4jProxyReceptor;
-import org.springframework.security.boot.pac4j.Pac4jRedirectionActionBuilder;
 import org.springframework.security.boot.pac4j.Pac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogoutHandler;
 import org.springframework.security.boot.pac4j.authorizer.Pac4jExtEntryPoint;
-import org.springframework.security.boot.pac4j.http.ajax.Pac4jAjaxRequestResolver;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -51,10 +47,10 @@ import org.springframework.security.web.savedrequest.RequestCache;
 public class SecurityPac4jFilterAutoConfiguration {
 
 	@Bean
-	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, Pac4jProperties pac4jProperties,
-			Pac4jLogoutProperties logoutProperties, ServerProperties serverProperties){
+	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, LogoutLogic<Object, JEEContext> logoutLogic,
+			Pac4jLogoutProperties logoutProperties){
 		
-		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler();
+		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler(config, logoutLogic);
         
 		// Whether the centralLogout must be performed（是否注销统一身份认证）
 		logoutHandler.setCentralLogout(logoutProperties.isCentralLogout());
@@ -84,30 +80,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 		return new DefaultPac4jCallbackUrlParser(callbackProperties.getRedirects());
 	}
 	
-	@Bean
-	public Pac4jProxyReceptor pac4jProxyReceptor(SecurityPac4jAuthcProperties authcProperties,
-			@Autowired(required = false) JwtPayloadRepository jwtPayloadRepository, 
-			Pac4jRedirectionUrlParser redirectionUrlParser,
-			UserDetailsServiceAdapter userDetailsService) {
-		
-		Pac4jRedirectionActionBuilder redirectionActionBuilder = new Pac4jRedirectionActionBuilder();
-		redirectionActionBuilder.setCallbackUrl(authcProperties.getAuthzProxyUrl());
-		redirectionActionBuilder.setJwtPayloadRepository(jwtPayloadRepository);
-		redirectionActionBuilder.setRedirectionUrlParser(redirectionUrlParser);
-		redirectionActionBuilder.setUserDetailsService(userDetailsService);
-		
-		Pac4jAjaxRequestResolver ajaxRequestResolver = new Pac4jAjaxRequestResolver();
-		ajaxRequestResolver.setJwtPayloadRepository(jwtPayloadRepository);
-		ajaxRequestResolver.setUserDetailsService(userDetailsService);
-		
-		Pac4jProxyReceptor proxyReceptor = new Pac4jProxyReceptor();
-		proxyReceptor.setCallbackUrl(authcProperties.getAuthzProxyUrl());
-		proxyReceptor.setCallbackUrlResolver(new QueryParameterCallbackUrlExtResolver());
-		proxyReceptor.setAjaxRequestResolver(ajaxRequestResolver);
-		proxyReceptor.setRedirectionActionBuilder(redirectionActionBuilder);
-		return proxyReceptor;
-	}
-	
 	@Configuration
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
@@ -122,9 +94,9 @@ public class SecurityPac4jFilterAutoConfiguration {
 		
 	    private final Config pac4jConfig;
 	    private final LogoutHandler logoutHandler;
+	    private final LogoutLogic<Object, JEEContext> logoutLogic;
 	    private final Pac4jExtEntryPoint authenticationEntryPoint;
     	private final RequestCache requestCache;
-    	private final Pac4jProxyReceptor pac4jProxyReceptor;
     	private final Pac4jCallbackUrlParser callbackUrlParser;
     	private final Pac4jRedirectionUrlParser redirectionUrlParser;
     	
@@ -138,9 +110,9 @@ public class SecurityPac4jFilterAutoConfiguration {
 				
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
-				ObjectProvider<Pac4jProxyReceptor> pac4jProxyReceptorProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
 				ObjectProvider<LogoutHandler> logoutHandlerProvider,
+				ObjectProvider<LogoutLogic<Object, JEEContext>> logoutLogicProvider,
 				ObjectProvider<Pac4jExtEntryPoint> authenticationEntryPointProvider,
 				ObjectProvider<Pac4jCallbackUrlParser> callbackUrlParserProvider,
 				ObjectProvider<Pac4jRedirectionUrlParser> redirectionUrlParserProvider
@@ -156,11 +128,11 @@ public class SecurityPac4jFilterAutoConfiguration {
 			this.pac4jLogoutProperties = pac4jLogoutProperties;
 			
 			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
-			this.pac4jProxyReceptor = pac4jProxyReceptorProvider.getIfAvailable();
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
 			this.callbackUrlParser = callbackUrlParserProvider.getIfAvailable();
 			this.redirectionUrlParser = redirectionUrlParserProvider.getIfAvailable();
 			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
+			this.logoutLogic = logoutLogicProvider.getIfAvailable();
    			this.requestCache = super.requestCache();
    			
 		}
@@ -173,14 +145,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 			
 			SecurityFilter securityFilter = new SecurityFilter();  
 			
-			//securityFilter.setAuthenticationManager(authenticationManagerBean());
-			//if (StringUtils2.hasText(authcProperties.getPathPattern())) {
-			//	securityFilter.setFilterProcessesUrl(authcProperties.getPathPattern());
-			//}
-			// 前后端分离
-			//if(authcProperties.isAuthzProxy() && pac4jProxyReceptor != null) {
-				//securityFilter.setProxyReceptor(pac4jProxyReceptor);
-			//}
 			// List of authorizers
 			securityFilter.setAuthorizers(pac4jProperties.getAuthorizers());
 			// List of clients for authentication
@@ -190,8 +154,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 			//securityFilter.setErrorUrl(authcProperties.getErrorUrl());
 			securityFilter.setMatchers(pac4jProperties.getMatchers());
 			// Whether multiple profiles should be kept
-			//securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
-			//securityFilter.setRedirectionUrlParser(redirectionUrlParser);
+			securityFilter.setMultiProfile(pac4jProperties.isMultiProfile());
 			
 		    return securityFilter;
 		}
@@ -202,16 +165,13 @@ public class SecurityPac4jFilterAutoConfiguration {
 		public CallbackFilter pac4jCallbackFilter() throws Exception {
 			
 			CallbackFilter callbackFilter = new CallbackFilter();
-		    
-			//callbackFilter.setAuthenticationManager(authenticationManager());
-			//if (StringUtils2.hasText(callbackProperties.getPathPattern())) {
-			//	callbackFilter.setFilterProcessesUrl(callbackProperties.getPathPattern());
-			//}
 			
+			// 
+			callbackFilter.setApplicationContext(this.getApplicationContext());
 		    // Security Configuration
 	        callbackFilter.setConfig(pac4jConfig);
-	        //callbackFilter.setCallbackUrlParser(callbackUrlParser);
-	        // 前后端分离模式
+	        callbackFilter.setDefaultClient(pac4jProperties.getDefaultClientName());
+
 	        if(authcProperties.isAuthzProxy()) {
 	        	callbackFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );
 	        } else {
@@ -221,9 +181,37 @@ public class SecurityPac4jFilterAutoConfiguration {
 			}
 	        
 	        // Whether multiple profiles should be kept
-	       // callbackFilter.setMultiProfile(pac4jProperties.isMultiProfile());
+	        callbackFilter.setMultiProfile(callbackProperties.isMultiProfile());
+	        callbackFilter.setRenewSession(callbackProperties.isRenewSession());
+	        callbackFilter.setSaveInSession(callbackProperties.isSaveInSession());
 	        
 		    return callbackFilter;
+		}
+		
+		/*
+		 * 登出过滤器 ：处理登录后的回调访问
+		 */
+		public LogoutFilter pac4jLogoutFilter() throws Exception {
+			
+			LogoutFilter logoutFilter = new LogoutFilter();
+			
+			logoutFilter.setCentralLogout(pac4jLogoutProperties.isCentralLogout());
+		    // Security Configuration
+	        logoutFilter.setConfig(pac4jConfig);
+
+	        if(authcProperties.isAuthzProxy()) {
+	        	logoutFilter.setDefaultUrl( authcProperties.getAuthzProxyUrl() );
+	        } else {
+	        	// Default url after login if none was requested（登录成功后的重定向地址，等同于shiro的successUrl）
+		        String callbackUrl = Pac4jUrlUtils.constructRedirectUrl(callbackProperties.getDefaultUrl(), pac4jProperties.getClientParameterName(), pac4jProperties.getDefaultClientName());
+		        logoutFilter.setDefaultUrl( callbackUrl );
+			}
+	        logoutFilter.setDestroySession(pac4jLogoutProperties.isDestroySession());
+	        logoutFilter.setLocalLogout(pac4jLogoutProperties.isLocalLogout());
+	        logoutFilter.setLogoutLogic(logoutLogic);
+	        logoutFilter.setLogoutUrlPattern(pac4jLogoutProperties.getPathPattern());
+	        
+		    return logoutFilter;
 		}
 		
 		@Override
@@ -251,7 +239,8 @@ public class SecurityPac4jFilterAutoConfiguration {
  				.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
  				.and()
    	        	.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
-   	        	.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class);
+   	        	.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
+   	        	.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
 
    	    	super.configure(http, authcProperties.getCors());
    	    	super.configure(http, authcProperties.getCsrf());
