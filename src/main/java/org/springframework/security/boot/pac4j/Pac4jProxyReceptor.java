@@ -20,30 +20,24 @@ import static org.pac4j.core.util.CommonHelper.toNiceString;
 import java.util.Optional;
 
 import org.pac4j.core.client.IndirectClient;
-import org.pac4j.core.credentials.TokenCredentials;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.exception.http.FoundAction;
 import org.pac4j.core.exception.http.OkAction;
-import org.pac4j.core.exception.http.RedirectionActionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * TODO
- * @author 		： <a href="https://github.com/hiwepy">wandl</a>
- */
-
-public class Pac4jProxyReceptor extends IndirectClient<TokenCredentials> {
+public class Pac4jProxyReceptor extends IndirectClient {
 
     public static final String PARAM_PROXY_TARGET = "target";
 
     private static final Logger logger = LoggerFactory.getLogger(Pac4jProxyReceptor.class);
     
     @Override
-    protected void clientInit() {
+    protected void internalInit() {
     	
-        defaultCredentialsExtractor(ctx -> {
+        defaultCredentialsExtractor((context, sessionStore) -> {
         	
-            final Optional<String> proxyTarget = ctx.getRequestParameter(PARAM_PROXY_TARGET);
+            final Optional<String> proxyTarget = context.getRequestParameter(PARAM_PROXY_TARGET);
             logger.debug("proxyTarget: {}", proxyTarget);
 
             if (!proxyTarget.isPresent()) {
@@ -54,11 +48,13 @@ public class Pac4jProxyReceptor extends IndirectClient<TokenCredentials> {
             throw new OkAction(proxyTarget.get());
         });
         
-        defaultRedirectionActionBuilder(ctx -> {
-        	return Optional.of(RedirectionActionHelper.buildRedirectUrlAction(ctx, callbackUrl));
+        defaultRedirectionActionBuilder((context, sessionStore) -> {
+        	//new Pac4jRedirectionActionBuilder()
+                 
+        	return Optional.of(new FoundAction(callbackUrl));
         });
         
-        defaultAuthenticator((credentials, ctx) -> { throw new TechnicalException("Not supported by the CAS proxy receptor"); });
+        defaultAuthenticator((credentials, context, sessionStore) -> { throw new TechnicalException("Not supported by the CAS proxy receptor"); });
     }
 
     @Override

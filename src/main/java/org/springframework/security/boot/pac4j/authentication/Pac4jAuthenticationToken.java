@@ -18,24 +18,21 @@ package org.springframework.security.boot.pac4j.authentication;
 
 import java.util.List;
 
-import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileHelper;
+import org.pac4j.core.profile.UserProfile;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.boot.utils.SpringSecurityHelper;
 
 /**
  * Pac4j authentication token when the user is authenticated.
- *
- * @author Jerome Leleu
- * @since 2.0.0
  */
 @SuppressWarnings("serial")
 public class Pac4jAuthenticationToken extends AbstractAuthenticationToken implements Pac4jAuthentication {
 
-    private final List<CommonProfile> profiles;
-    private final CommonProfile principal;
+    private final List<UserProfile> profiles;
+    private final UserProfile principal;
     
-    public Pac4jAuthenticationToken(final List<CommonProfile> profiles) {
+    public Pac4jAuthenticationToken(final List<UserProfile> profiles) {
         super(SpringSecurityHelper.buildAuthorities(profiles));
         this.profiles = profiles;
         this.principal = ProfileHelper.flatIntoOneProfile(profiles).get();
@@ -58,7 +55,7 @@ public class Pac4jAuthenticationToken extends AbstractAuthenticationToken implem
     }
 
     @Override
-    public List<CommonProfile> getProfiles() {
+    public List<UserProfile> getProfiles() {
         return this.profiles;
     }
 }

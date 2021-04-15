@@ -3,7 +3,7 @@ package org.springframework.security.boot;
 import org.pac4j.core.config.Config;
 import org.pac4j.spring.boot.Pac4jAutoConfiguration;
 import org.pac4j.spring.boot.Pac4jProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.pac4j.springframework.security.web.Pac4jEntryPoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
+import org.springframework.security.boot.pac4j.authorizer.Pac4jExtEntryPoint;
 
 // http://blog.csdn.net/change_on/article/details/76302161
 @Configuration
@@ -21,12 +21,9 @@ import org.springframework.security.boot.pac4j.authorizer.Pac4jEntryPoint;
 @EnableConfigurationProperties({ Pac4jProperties.class })
 public class SecurityPac4jAutoConfiguration {
   
-	@Autowired
-	private Pac4jProperties pac4jProperties;
-	
     @Bean
-    public Pac4jEntryPoint pac4jEntryPoint(Config config){
-		return new Pac4jEntryPoint(config, pac4jProperties.getDefaultClientName(), pac4jProperties.getClientParameterName());
+    public Pac4jEntryPoint pac4jEntryPoint(Config config, Pac4jProperties pac4jProperties){
+		return new Pac4jExtEntryPoint(config, pac4jProperties.getDefaultClientName(), pac4jProperties.getClientParameterName());
 	}
 
 }

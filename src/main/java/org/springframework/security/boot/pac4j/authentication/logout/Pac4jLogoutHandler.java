@@ -20,43 +20,41 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.context.JEEContextFactory;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.JEESessionStore;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultLogoutLogic;
 import org.pac4j.core.engine.LogoutLogic;
+import org.pac4j.core.http.adapter.HttpActionAdapter;
 import org.pac4j.core.http.adapter.JEEHttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.core.util.FindBest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.boot.pac4j.profile.SpringSecurityProfileManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
-/**
- * TODO
- * @author 		： <a href="https://github.com/hiwepy">wandl</a>
- */
-@SuppressWarnings("unchecked")
 public class Pac4jLogoutHandler implements LogoutHandler {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private LogoutLogic<Object, JEEContext> logoutLogic;
+	private LogoutLogic logoutLogic;
 
-	private Config config;
+    private Config config;
 
-	private String defaultUrl;
+    private String defaultUrl;
 
-	private String logoutUrlPattern;
+    private String logoutUrlPattern;
 
-	private boolean localLogout;
+    private Boolean localLogout;
 
-	private boolean destroySession;
+    private Boolean destroySession;
 
-	private boolean centralLogout;
+    private Boolean centralLogout;
 
 	public Pac4jLogoutHandler() {
-		logoutLogic = new DefaultLogoutLogic<>();
-		((DefaultLogoutLogic<Object, JEEContext>) logoutLogic).setProfileManagerFactory(SpringSecurityProfileManager::new);
+		logoutLogic = new DefaultLogoutLogic();
 	}
 
 	public Pac4jLogoutHandler(final Config config) {
@@ -76,18 +74,22 @@ public class Pac4jLogoutHandler implements LogoutHandler {
 		
 		final Config config = getConfig();
 		CommonHelper.assertNotNull("config", config);
-		final JEEContext context = new JEEContext(request, response, config.getSessionStore());
+		
+		final SessionStore bestSessionStore = FindBest.sessionStore(null, config, JEESessionStore.INSTANCE);
+        final HttpActionAdapter bestAdapter = FindBest.httpActionAdapter(null, config, JEEHttpActionAdapter.INSTANCE);
+        final LogoutLogic bestLogic = FindBest.logoutLogic(logoutLogic, config, DefaultLogoutLogic.INSTANCE);
 
-		logoutLogic.perform(context, config, JEEHttpActionAdapter.INSTANCE, this.getDefaultUrl(),
+        final WebContext context = FindBest.webContextFactory(null, config, JEEContextFactory.INSTANCE).newContext(request, response);
+        bestLogic.perform(context, bestSessionStore, config, bestAdapter, this.getDefaultUrl(),
 				this.getLogoutUrlPattern(), this.isLocalLogout(), this.isDestroySession(), this.isCentralLogout());
 
 	}
 
-	public LogoutLogic<Object, JEEContext> getLogoutLogic() {
+	public LogoutLogic getLogoutLogic() {
 		return logoutLogic;
 	}
 
-	public void setLogoutLogic(LogoutLogic<Object, JEEContext> logoutLogic) {
+	public void setLogoutLogic(LogoutLogic logoutLogic) {
 		this.logoutLogic = logoutLogic;
 	}
 
