@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.boot.biz.property.SecuritySessionMgtProperties;
 import org.springframework.security.boot.pac4j.DefaultPac4jCallbackUrlParser;
 import org.springframework.security.boot.pac4j.DefaultPac4jRedirectionUrlParser;
 import org.springframework.security.boot.pac4j.Pac4jCallbackUrlParser;
@@ -103,6 +104,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 		public Pac4jWebSecurityConfigurationAdapter(
 				
 				SecurityBizProperties bizProperties,
+				SecuritySessionMgtProperties sessionMgtProperties,
 				SecurityPac4jAuthcProperties authcProperties,
 				SecurityPac4jCallbackProperties callbackProperties,
 				Pac4jProperties pac4jProperties,
@@ -119,7 +121,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 				
 			) {
 			
-			super(bizProperties, authcProperties, authenticationProvider.stream().collect(Collectors.toList()),
+			super(bizProperties, authcProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()),
 					authenticationManagerProvider.getIfAvailable());
 			
 			this.pac4jProperties = pac4jProperties;
