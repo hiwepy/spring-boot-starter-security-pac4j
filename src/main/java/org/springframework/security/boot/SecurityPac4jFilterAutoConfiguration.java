@@ -13,6 +13,7 @@ import org.pac4j.springframework.security.web.CallbackFilter;
 import org.pac4j.springframework.security.web.LogoutFilter;
 import org.pac4j.springframework.security.web.SecurityFilter;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.biz.web.servlet.i18n.LocaleContextFilter;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -24,7 +25,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.biz.property.SecuritySessionMgtProperties;
 import org.springframework.security.boot.pac4j.DefaultPac4jCallbackUrlParser;
@@ -35,9 +35,7 @@ import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogout
 import org.springframework.security.boot.pac4j.authorizer.Pac4jExtEntryPoint;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.savedrequest.RequestCache;
 
 @Configuration
 @AutoConfigureAfter(Pac4jAutoConfiguration.class)
@@ -94,12 +92,9 @@ public class SecurityPac4jFilterAutoConfiguration {
 		private final SecurityPac4jCallbackProperties callbackProperties;
 		
 	    private final Config pac4jConfig;
-	    private final LogoutHandler logoutHandler;
 	    private final LogoutLogic<Object, JEEContext> logoutLogic;
 	    private final Pac4jExtEntryPoint authenticationEntryPoint;
-    	private final RequestCache requestCache;
-    	private final Pac4jCallbackUrlParser callbackUrlParser;
-    	private final Pac4jRedirectionUrlParser redirectionUrlParser;
+	    private final LocaleContextFilter localeContextFilter;
     	
 		public Pac4jWebSecurityConfigurationAdapter(
 				
@@ -110,32 +105,27 @@ public class SecurityPac4jFilterAutoConfiguration {
 				Pac4jProperties pac4jProperties,
 				Pac4jLogoutProperties pac4jLogoutProperties,
 				
-				ObjectProvider<AuthenticationProvider> authenticationProvider,
-				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
 				ObjectProvider<Config> pac4jConfigProvider,
-				ObjectProvider<LogoutHandler> logoutHandlerProvider,
 				ObjectProvider<LogoutLogic<Object, JEEContext>> logoutLogicProvider,
 				ObjectProvider<Pac4jExtEntryPoint> authenticationEntryPointProvider,
-				ObjectProvider<Pac4jCallbackUrlParser> callbackUrlParserProvider,
-				ObjectProvider<Pac4jRedirectionUrlParser> redirectionUrlParserProvider
 				
+				ObjectProvider<LocaleContextFilter> localeContextProvider,
+				ObjectProvider<AuthenticationProvider> authenticationProvider
 			) {
 			
-			super(bizProperties, authcProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()),
-					authenticationManagerProvider.getIfAvailable());
+			super(bizProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()));
 			
 			this.pac4jProperties = pac4jProperties;
 			this.authcProperties = authcProperties;
 			this.callbackProperties = callbackProperties;
 			this.pac4jLogoutProperties = pac4jLogoutProperties;
 			
-			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
+			
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
-			this.callbackUrlParser = callbackUrlParserProvider.getIfAvailable();
-			this.redirectionUrlParser = redirectionUrlParserProvider.getIfAvailable();
-			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
 			this.logoutLogic = logoutLogicProvider.getIfAvailable();
-   			this.requestCache = super.requestCache();
+   			
+			this.localeContextFilter = localeContextProvider.getIfAvailable();
+   			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable(); 
    			
 		}
 
@@ -219,27 +209,15 @@ public class SecurityPac4jFilterAutoConfiguration {
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
 			
-   	    	http.requestCache()
-   	        	.requestCache(requestCache)
-   	        	// Session 注销配置
+   	    	http.requestMatchers()
+   	    		.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
    	    		.and()
-   	    		.logout()
-   	    		.logoutUrl(pac4jLogoutProperties.getPathPattern())
-   	    		.logoutSuccessUrl(pac4jLogoutProperties.getDefaultUrl())
-   	    		.addLogoutHandler(logoutHandler)
-   	    		.clearAuthentication(true)
-   	    		.invalidateHttpSession(true)
-   	        	// 异常处理
-   	        	.and()
-   	        	.exceptionHandling()
+   	    		.exceptionHandling()
    	        	.authenticationEntryPoint(authenticationEntryPoint)
    	        	.and()
    	        	.httpBasic()
-   	        	.authenticationEntryPoint(authenticationEntryPoint)
-   	        	.and()
-   	        	.requestMatchers()
- 				.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
- 				.and()
+   	        	.disable()
+   	        	.addFilterBefore(localeContextFilter, SecurityFilter.class)
    	        	.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
    	        	.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
    	        	.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
