@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.boot.biz.property.SecuritySessionMgtProperties;
 import org.springframework.security.boot.pac4j.DefaultPac4jCallbackUrlParser;
@@ -110,10 +111,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<Pac4jExtEntryPoint> authenticationEntryPointProvider,
 				
 				ObjectProvider<LocaleContextFilter> localeContextProvider,
-				ObjectProvider<AuthenticationProvider> authenticationProvider
+				ObjectProvider<AuthenticationProvider> authenticationProvider,
+   				ObjectProvider<AuthenticationManager> authenticationManagerProvider
 			) {
-			
-			super(bizProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()));
+
+			super(bizProperties, authcProperties, authenticationProvider.stream().collect(Collectors.toList()),
+					authenticationManagerProvider.getIfAvailable());
 			
 			this.pac4jProperties = pac4jProperties;
 			this.authcProperties = authcProperties;
