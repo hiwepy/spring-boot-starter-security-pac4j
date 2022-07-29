@@ -15,7 +15,7 @@
  */
 package org.springframework.security.boot;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.boot.utils.UrlDomainUtils;
 
 /**
@@ -32,5 +32,5 @@ public class UrlDomainUtilsTest {
 		 System.err.println(UrlDomainUtils.parseURLParams(url));
 		 System.err.println(UrlDomainUtils.parseURLParam(url, "targetxx"));
 	}
-	
+
 }
