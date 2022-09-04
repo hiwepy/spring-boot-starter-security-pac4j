@@ -63,15 +63,17 @@ import org.springframework.security.web.session.SessionInformationExpiredStrateg
 public class SecurityPac4jFilterAutoConfiguration {
 
 	@Bean
-	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, LogoutLogic<Object, JEEContext> logoutLogic,
+	public Pac4jLogoutHandler pac4jLogoutHandler(
+			ObjectProvider<Config> configProvider,
+			ObjectProvider<LogoutLogic<Object, JEEContext>> logoutLogicProvider,
 			Pac4jLogoutProperties logoutProperties){
 
-		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler(config, logoutLogic);
+		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler(configProvider.getIfAvailable(), logoutLogicProvider.getIfAvailable());
 
 		// Whether the centralLogout must be performed（是否注销统一身份认证）
 		logoutHandler.setCentralLogout(logoutProperties.isCentralLogout());
 		// Security Configuration
-		logoutHandler.setConfig(config);
+		logoutHandler.setConfig(configProvider.getIfAvailable());
         // Default logourl url
 		logoutHandler.setDefaultUrl(logoutProperties.getDefaultUrl());
         // Whether the Session must be destroyed（是否销毁Session）
@@ -100,7 +102,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
-	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
 	static class Pac4jWebSecurityConfigurationAdapter extends SecurityFilterChainConfigurer implements ApplicationContextAware {
 
 		private final Pac4jProperties pac4jProperties;
@@ -229,10 +230,10 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 
 		@Bean
+		@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
 		public SecurityFilterChain pac4jSecurityFilterChain(HttpSecurity http) throws Exception {
 			// new DefaultSecurityFilterChain(new AntPathRequestMatcher(authcProperties.getPathPattern()), localeContextFilter, authenticationProcessingFilter());
 			http.antMatcher(authcProperties.getPathPattern())
-				.antMatcher(authcProperties.getPathPattern())
 				// 请求鉴权配置
 				.authorizeRequests(this.authorizeRequestsCustomizer())
 				// 跨站请求配置
