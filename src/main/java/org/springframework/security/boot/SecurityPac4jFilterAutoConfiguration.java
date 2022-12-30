@@ -41,6 +41,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -100,12 +101,12 @@ public class SecurityPac4jFilterAutoConfiguration {
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
-	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
 	static class Pac4jWebSecurityConfigurationAdapter extends SecurityFilterChainConfigurer implements ApplicationContextAware {
 
 		private final Pac4jProperties pac4jProperties;
 		private final Pac4jLogoutProperties pac4jLogoutProperties;
 		private final SecurityPac4jAuthcProperties authcProperties;
+		private final SecurityBizProperties bizProperties;
 		private final SecurityPac4jCallbackProperties callbackProperties;
 
 	    private final Config pac4jConfig;
@@ -113,7 +114,6 @@ public class SecurityPac4jFilterAutoConfiguration {
 
 		private final Pac4jExtEntryPoint authenticationEntryPoint;
 		private final LocaleContextFilter localeContextFilter;
-		private final RequestCache requestCache;
 
 		private ApplicationContext applicationContext;
 
@@ -130,27 +130,28 @@ public class SecurityPac4jFilterAutoConfiguration {
 				ObjectProvider<Pac4jExtEntryPoint> authenticationEntryPointProvider,
 
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
+				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
 				ObjectProvider<LocaleContextFilter> localeContextProvider,
-   				ObjectProvider<AuthenticationManager> authenticationManagerProvider
+				ObjectProvider<RedirectStrategy> redirectStrategyProvider,
+				ObjectProvider<RequestCache> requestCacheProvider
 			) {
 
-			super(bizProperties, authcProperties, authenticationProvider.stream().collect(Collectors.toList()));
+
+			super(bizProperties, redirectStrategyProvider.getIfAvailable(), requestCacheProvider.getIfAvailable());
 
 			this.pac4jProperties = pac4jProperties;
+			this.bizProperties = bizProperties;
 			this.authcProperties = authcProperties;
 			this.callbackProperties = callbackProperties;
 			this.pac4jLogoutProperties = pac4jLogoutProperties;
-
 
 			this.pac4jConfig = pac4jConfigProvider.getIfAvailable();
 			this.logoutLogic = logoutLogicProvider.getIfAvailable();
 
 			this.localeContextFilter = localeContextProvider.getIfAvailable();
    			this.authenticationEntryPoint = authenticationEntryPointProvider.getIfAvailable();
-			this.requestCache = super.requestCache();
 
 		}
-
 
 		/*
 		 * 权限控制过滤器 ：实现权限认证
@@ -229,27 +230,25 @@ public class SecurityPac4jFilterAutoConfiguration {
 		}
 
 		@Bean
+		@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
 		public SecurityFilterChain pac4jSecurityFilterChain(HttpSecurity http) throws Exception {
 			// new DefaultSecurityFilterChain(new AntPathRequestMatcher(authcProperties.getPathPattern()), localeContextFilter, authenticationProcessingFilter());
 			http.antMatcher(authcProperties.getPathPattern())
-				.antMatcher(authcProperties.getPathPattern())
-				// 请求鉴权配置
-				.authorizeRequests(this.authorizeRequestsCustomizer())
-				// 跨站请求配置
-				.csrf(this.csrfCustomizer(authcProperties.getCsrf()))
-				// 跨域配置
-				.cors(this.corsCustomizer(authcProperties.getCors()))
-				// 异常处理
-				.exceptionHandling((configurer) -> configurer.authenticationEntryPoint(authenticationEntryPoint))
-				// 请求头配置
-				.headers(this.headersCustomizer(authcProperties.getHeaders()))
-				// Request 缓存配置
-				.requestCache((request) -> request.requestCache(requestCache))
-				// Filter 配置
-				.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
-				.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
-				.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
-				.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
+					// 请求鉴权配置
+					.authorizeRequests(this.authorizeRequestsCustomizer())
+					// 异常处理
+					.exceptionHandling((configurer) -> configurer.authenticationEntryPoint(authenticationEntryPoint))
+					// 请求头配置
+					.headers(this.headersCustomizer(bizProperties.getHeaders()))
+					// Request 缓存配置
+					.requestCache(this.requestCacheCustomizer())
+					// 禁用 Http Basic
+					.httpBasic((basic) -> basic.disable())
+					// Filter 配置
+					.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
+					.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
+					.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
+					.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
 
 			return http.build();
 		}
