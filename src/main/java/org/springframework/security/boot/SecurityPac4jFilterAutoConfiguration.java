@@ -41,7 +41,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -64,15 +63,17 @@ import org.springframework.security.web.session.SessionInformationExpiredStrateg
 public class SecurityPac4jFilterAutoConfiguration {
 
 	@Bean
-	public Pac4jLogoutHandler pac4jLogoutHandler(Config config, LogoutLogic<Object, JEEContext> logoutLogic,
+	public Pac4jLogoutHandler pac4jLogoutHandler(
+			ObjectProvider<Config> configProvider,
+			ObjectProvider<LogoutLogic<Object, JEEContext>> logoutLogicProvider,
 			Pac4jLogoutProperties logoutProperties){
 
-		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler(config, logoutLogic);
+		Pac4jLogoutHandler logoutHandler = new Pac4jLogoutHandler(configProvider.getIfAvailable(), logoutLogicProvider.getIfAvailable());
 
 		// Whether the centralLogout must be performed（是否注销统一身份认证）
 		logoutHandler.setCentralLogout(logoutProperties.isCentralLogout());
 		// Security Configuration
-		logoutHandler.setConfig(config);
+		logoutHandler.setConfig(configProvider.getIfAvailable());
         // Default logourl url
 		logoutHandler.setDefaultUrl(logoutProperties.getDefaultUrl());
         // Whether the Session must be destroyed（是否销毁Session）
