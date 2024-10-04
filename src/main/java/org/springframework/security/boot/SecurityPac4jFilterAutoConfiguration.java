@@ -1,7 +1,5 @@
 package org.springframework.security.boot;
 
-import java.util.stream.Collectors;
-
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.engine.LogoutLogic;
@@ -35,14 +33,16 @@ import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogout
 import org.springframework.security.boot.pac4j.authorizer.Pac4jExtEntryPoint;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import java.util.stream.Collectors;
 
 @Configuration
 @AutoConfigureAfter(Pac4jAutoConfiguration.class)
 @AutoConfigureBefore({ SecurityFilterAutoConfiguration.class })
 @ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
-@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
-		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, ServerProperties.class })
+@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class, SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, ServerProperties.class })
 public class SecurityPac4jFilterAutoConfiguration {
 
 	@Bean
@@ -83,8 +83,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	@ConditionalOnProperty(prefix = SecurityPac4jProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityPac4jProperties.class, SecurityPac4jAuthcProperties.class,
 		SecurityPac4jCallbackProperties.class, Pac4jLogoutProperties.class, Pac4jProperties.class, ServerProperties.class })
-	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
-	static class Pac4jWebSecurityConfigurationAdapter extends WebSecurityBizConfigurerAdapter {
+	static class Pac4jWebSecurityCustomizerAdapter extends WebSecurityCustomizerAdapter {
 
 		private final Pac4jProperties pac4jProperties;
 		private final Pac4jLogoutProperties pac4jLogoutProperties;
@@ -96,7 +95,7 @@ public class SecurityPac4jFilterAutoConfiguration {
 	    private final Pac4jExtEntryPoint authenticationEntryPoint;
 	    private final LocaleContextFilter localeContextFilter;
     	
-		public Pac4jWebSecurityConfigurationAdapter(
+		public Pac4jWebSecurityCustomizerAdapter(
 				
 				SecurityBizProperties bizProperties,
 				SecuritySessionMgtProperties sessionMgtProperties,
@@ -205,34 +204,36 @@ public class SecurityPac4jFilterAutoConfiguration {
 	        
 		    return logoutFilter;
 		}
-		
-		@Override
-		public void configure(HttpSecurity http) throws Exception {
-			
-   	    	http.requestMatchers()
-   	    		.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
-   	    		.and()
-   	    		.exceptionHandling()
-   	        	.authenticationEntryPoint(authenticationEntryPoint)
-   	        	.and()
-   	        	.httpBasic()
-   	        	.disable()
-   	        	.addFilterBefore(localeContextFilter, SecurityFilter.class)
-   	        	.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
-   	        	.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
-   	        	.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
 
-   	    	super.configure(http, authcProperties.getCors());
-   	    	super.configure(http, authcProperties.getCsrf());
-   	    	super.configure(http, authcProperties.getHeaders());
-	    	super.configure(http);
-	    	 
+		@Bean
+		@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 20)
+		public SecurityFilterChain pack4jSecurityFilterChain(HttpSecurity http) throws Exception {
+
+			http = http.requestMatchers()
+					.antMatchers(authcProperties.getPathPattern(), callbackProperties.getPathPattern())
+					.and()
+					.exceptionHandling()
+					.authenticationEntryPoint(authenticationEntryPoint)
+					.and()
+					.httpBasic()
+					.disable()
+					.addFilterBefore(localeContextFilter, SecurityFilter.class)
+					.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
+					.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
+					.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
+
+			super.configure(http, authcProperties.getCors());
+			super.configure(http, authcProperties.getCsrf());
+			super.configure(http, authcProperties.getHeaders());
+			super.configure(http);
+
+			return http.build();
 		}
-		
+
 		@Override
-	    public void configure(WebSecurity web) throws Exception {
-	    	super.configure(web);
-	    }
+		public void customize(WebSecurity web) {
+			super.customize(web);
+		}
 
 	}
 

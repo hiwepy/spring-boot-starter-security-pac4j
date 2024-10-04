@@ -15,7 +15,7 @@
  */
 package org.springframework.security.boot;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.boot.utils.UrlDomainUtils;
 
 /**
