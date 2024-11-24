@@ -33,7 +33,9 @@ import org.springframework.security.boot.pac4j.authentication.logout.Pac4jLogout
 import org.springframework.security.boot.pac4j.authorizer.Pac4jExtEntryPoint;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.util.stream.Collectors;
@@ -221,6 +223,16 @@ public class SecurityPac4jFilterAutoConfiguration {
 					.addFilterBefore(pac4jSecurityFilter(), BasicAuthenticationFilter.class)
 					.addFilterBefore(pac4jCallbackFilter(), SecurityFilter.class)
 					.addFilterAt(pac4jLogoutFilter(), SecurityFilter.class);
+
+			http.securityMatcher(authcProperties.getPathPattern())
+					.exceptionHandling(configurer -> {
+						configurer.authenticationEntryPoint(authenticationEntryPoint)
+								.accessDeniedHandler(accessDeniedHandler)
+								.accessDeniedPage(authcProperties.getAccessDeniedUrl());
+					});
+			http.httpBasic(AbstractHttpConfigurer::disable);
+			http.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
+					.addFilterBefore(authenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
 
 			super.configure(http, authcProperties.getCors());
 			super.configure(http, authcProperties.getCsrf());

@@ -16,8 +16,8 @@
 package org.springframework.security.boot.pac4j.authentication.logout;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.JEEContext;
